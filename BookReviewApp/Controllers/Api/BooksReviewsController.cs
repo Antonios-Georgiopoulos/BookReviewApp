@@ -1,10 +1,10 @@
-﻿using BookReviewApp.Models.ViewModels.Api;
+﻿using BookReviewApp.Models.Api;
+using BookReviewApp.Models.ViewModels.Api;
 using BookReviewApp.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookReviewApp.Controllers.Api
 {
-    [Route("api/books/{bookId}/reviews")]
     public class BooksReviewsController : BaseController
     {
         private readonly IReviewService _reviewService;
@@ -21,18 +21,21 @@ namespace BookReviewApp.Controllers.Api
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetBookReviews(int bookId)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ReviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 500)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ReviewDto>>>> GetBookReviews(int bookId)
         {
             try
             {
                 var bookExists = await _bookService.BookExistsAsync(bookId);
                 if (!bookExists)
                 {
-                    return HandleNotFound<IEnumerable<ReviewDto>>("Book", bookId);
+                    return NotFoundResponse<IEnumerable<ReviewDto>>("Book", bookId);
                 }
 
                 var reviews = await _reviewService.GetReviewsByBookIdAsync(bookId);
-                return Ok(reviews);
+                return Success(reviews, "Reviews retrieved successfully");
             }
             catch (Exception ex)
             {

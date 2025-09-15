@@ -1,5 +1,21 @@
 ﻿namespace BookReviewApp.Common
 {
+    public static class CacheKeys
+    {
+        public const string AllBooks = "books_all_{0}_{1}_{2}"; // genre, year, minRating
+        public const string BookById = "book_{0}";
+        public const string BookDetails = "book_details_{0}_{1}"; // bookId, userId
+        public const string BookGenres = "book_genres";
+        public const string BookYears = "book_years";
+        public const string ReviewsByBook = "reviews_book_{0}";
+        public const string ReviewById = "review_{0}";
+
+        public static string GetBookCacheKey(int bookId) => string.Format(BookById, bookId);
+        public static string GetBooksCacheKey(string? genre, int? year, double? minRating) =>
+            string.Format(AllBooks, genre ?? "null", year?.ToString() ?? "null", minRating?.ToString() ?? "null");
+        public static string GetReviewsCacheKey(int bookId) => string.Format(ReviewsByBook, bookId);
+    }
+
     public static class ActionNames
     {
         public const string Index = nameof(Index);

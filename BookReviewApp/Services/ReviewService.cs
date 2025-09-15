@@ -1,29 +1,26 @@
-﻿using BookReviewApp.Data;
+﻿using BookReviewApp.Data.Repositories.Interfaces;
 using BookReviewApp.Models.Domain;
 using BookReviewApp.Models.ViewModels.Api;
 using BookReviewApp.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace BookReviewApp.Services
 {
     public class ReviewService : IReviewService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ReviewService(ApplicationDbContext context)
+        public ReviewService(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<IEnumerable<ReviewDto>> GetReviewsByBookIdAsync(int bookId)
         {
-            var reviews = await _context.Reviews
-                .Include(r => r.User)
-                .Include(r => r.Book)
-                .Include(r => r.ReviewVotes)
-                .Where(r => r.BookId == bookId)
-                .OrderByDescending(r => r.DateCreated)
-                .ToListAsync();
+            var reviews = await _unitOfWork.Reviews.GetAllAsync(
+                filter: r => r.BookId == bookId,
+                orderBy: reviews => reviews.OrderByDescending(r => r.DateCreated),
+                includeProperties: "User,Book,ReviewVotes"
+            );
 
             return reviews.Select(r => new ReviewDto
             {
@@ -43,11 +40,10 @@ namespace BookReviewApp.Services
 
         public async Task<ReviewDto?> GetReviewByIdAsync(int id)
         {
-            var review = await _context.Reviews
-                .Include(r => r.User)
-                .Include(r => r.Book)
-                .Include(r => r.ReviewVotes)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var review = await _unitOfWork.Reviews.GetFirstOrDefaultAsync(
+                filter: r => r.Id == id,
+                includeProperties: "User,Book,ReviewVotes"
+            );
 
             if (review == null) return null;
 
@@ -69,15 +65,16 @@ namespace BookReviewApp.Services
 
         public async Task<ReviewDto> CreateReviewAsync(CreateReviewDto createReviewDto, string userId)
         {
-            var existingReview = await _context.Reviews
-                .FirstOrDefaultAsync(r => r.BookId == createReviewDto.BookId && r.UserId == userId);
+            var existingReview = await _unitOfWork.Reviews.GetFirstOrDefaultAsync(
+                filter: r => r.BookId == createReviewDto.BookId && r.UserId == userId
+            );
 
             if (existingReview != null)
             {
                 throw new InvalidOperationException("User has already reviewed this book.");
             }
 
-            var bookExists = await _context.Books.AnyAsync(b => b.Id == createReviewDto.BookId);
+            var bookExists = await _unitOfWork.Books.ExistsAsync(b => b.Id == createReviewDto.BookId);
             if (!bookExists)
             {
                 throw new ArgumentException("Book does not exist.");
@@ -92,18 +89,17 @@ namespace BookReviewApp.Services
                 DateCreated = DateTime.UtcNow
             };
 
-            _context.Reviews.Add(review);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Reviews.AddAsync(review);
+            await _unitOfWork.SaveAsync();
 
-            var createdReview = await _context.Reviews
-                .Include(r => r.User)
-                .Include(r => r.Book)
-                .Include(r => r.ReviewVotes)
-                .FirstAsync(r => r.Id == review.Id);
+            var createdReview = await _unitOfWork.Reviews.GetFirstOrDefaultAsync(
+                filter: r => r.Id == review.Id,
+                includeProperties: "User,Book,ReviewVotes"
+            );
 
             return new ReviewDto
             {
-                Id = createdReview.Id,
+                Id = createdReview!.Id,
                 Content = createdReview.Content,
                 Rating = createdReview.Rating,
                 DateCreated = createdReview.DateCreated,
@@ -119,7 +115,7 @@ namespace BookReviewApp.Services
 
         public async Task<ReviewDto?> UpdateReviewAsync(int id, CreateReviewDto updateReviewDto, string userId)
         {
-            var review = await _context.Reviews.FindAsync(id);
+            var review = await _unitOfWork.Reviews.GetByIdAsync(id);
             if (review == null) return null;
 
             if (review.UserId != userId)
@@ -130,14 +126,15 @@ namespace BookReviewApp.Services
             review.Content = updateReviewDto.Content;
             review.Rating = updateReviewDto.Rating;
 
-            await _context.SaveChangesAsync();
+            _unitOfWork.Reviews.Update(review);
+            await _unitOfWork.SaveAsync();
 
             return await GetReviewByIdAsync(id);
         }
 
         public async Task<bool> DeleteReviewAsync(int id, string userId)
         {
-            var review = await _context.Reviews.FindAsync(id);
+            var review = await _unitOfWork.Reviews.GetByIdAsync(id);
             if (review == null) return false;
 
             if (review.UserId != userId)
@@ -145,25 +142,24 @@ namespace BookReviewApp.Services
                 throw new UnauthorizedAccessException("User can only delete their own reviews.");
             }
 
-            _context.Reviews.Remove(review);
-            await _context.SaveChangesAsync();
+            _unitOfWork.Reviews.Delete(review);
+            await _unitOfWork.SaveAsync();
             return true;
         }
 
         public async Task<bool> UserHasReviewedBookAsync(int bookId, string userId)
         {
-            return await _context.Reviews
-                .AnyAsync(r => r.BookId == bookId && r.UserId == userId);
+            return await _unitOfWork.Reviews.ExistsAsync(r => r.BookId == bookId && r.UserId == userId);
         }
 
         public async Task<bool> ReviewExistsAsync(int id)
         {
-            return await _context.Reviews.AnyAsync(r => r.Id == id);
+            return await _unitOfWork.Reviews.ExistsAsync(r => r.Id == id);
         }
 
         public async Task<bool> VoteOnReviewAsync(int reviewId, string userId, bool isUpvote)
         {
-            var review = await _context.Reviews.FindAsync(reviewId);
+            var review = await _unitOfWork.Reviews.GetByIdAsync(reviewId);
             if (review == null) return false;
 
             if (review.UserId == userId)
@@ -171,19 +167,21 @@ namespace BookReviewApp.Services
                 throw new InvalidOperationException("Users cannot vote on their own reviews.");
             }
 
-            var existingVote = await _context.ReviewVotes
-                .FirstOrDefaultAsync(rv => rv.ReviewId == reviewId && rv.UserId == userId);
+            var existingVote = await _unitOfWork.ReviewVotes.GetFirstOrDefaultAsync(
+                filter: rv => rv.ReviewId == reviewId && rv.UserId == userId
+            );
 
             if (existingVote != null)
             {
                 if (existingVote.IsUpvote == isUpvote)
                 {
-                    _context.ReviewVotes.Remove(existingVote);
+                    _unitOfWork.ReviewVotes.Delete(existingVote);
                 }
                 else
                 {
                     existingVote.IsUpvote = isUpvote;
                     existingVote.DateCreated = DateTime.UtcNow;
+                    _unitOfWork.ReviewVotes.Update(existingVote);
                 }
             }
             else
@@ -195,17 +193,18 @@ namespace BookReviewApp.Services
                     IsUpvote = isUpvote,
                     DateCreated = DateTime.UtcNow
                 };
-                _context.ReviewVotes.Add(newVote);
+                await _unitOfWork.ReviewVotes.AddAsync(newVote);
             }
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveAsync();
             return true;
         }
 
         public async Task<bool?> GetUserVoteOnReviewAsync(int reviewId, string userId)
         {
-            var vote = await _context.ReviewVotes
-                .FirstOrDefaultAsync(rv => rv.ReviewId == reviewId && rv.UserId == userId);
+            var vote = await _unitOfWork.ReviewVotes.GetFirstOrDefaultAsync(
+                filter: rv => rv.ReviewId == reviewId && rv.UserId == userId
+            );
 
             return vote?.IsUpvote;
         }
