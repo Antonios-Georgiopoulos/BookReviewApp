@@ -5,5 +5,4 @@ global using Microsoft.EntityFrameworkCore;
 global using BookReviewApp.Data;
 global using BookReviewApp.Models.Domain;
 global using BookReviewApp.Models.ViewModels.Api;
-global using AutoMapper;
 global using BookReviewApp.Data.Repositories.Interfaces;
