@@ -24,7 +24,7 @@ jobs:
     permissions:
       contents: read
       checks: write         # allow Check Run on same-repo push/PR
-      pull-requests: write  # (not used on forks due to read-only token)
+      pull-requests: write  # used by some reporters; no effect on forks
 
     steps:
       - uses: actions/checkout@v4
@@ -41,9 +41,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal \
-              --logger "trx;LogFileName=test-results.trx" \
-              --results-directory ./TestResults
+        run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
 
       - name: Publish test results (as Check)
         if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
