@@ -1,73 +1,94 @@
 ﻿using BookReviewApp.Controllers.Api;
+using BookReviewApp.Models.Api;
+using BookReviewApp.Models.ViewModels.Api;
 using BookReviewApp.Services.Interfaces;
+using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace BookReviewApp.Tests.Controllers
 {
-    public class BooksControllerTests
+    public class BooksControllerMoreTests
     {
-        private readonly Mock<IBookService> _mockBookService;
-        private readonly Mock<ILogger<BooksController>> _mockLogger;
-        private readonly BooksController _controller;
+        private readonly Mock<IBookService> _bookService = new();
+        private readonly Mock<ILogger<BooksController>> _logger = new();
+        private readonly BooksController _sut;
 
-        public BooksControllerTests()
+        public BooksControllerMoreTests()
         {
-            _mockBookService = new Mock<IBookService>();
-            _mockLogger = new Mock<ILogger<BooksController>>();
-            _controller = new BooksController(_mockBookService.Object, _mockLogger.Object);
-        }
-
-        [Fact]
-        public async Task GetBooks_ShouldReturnOkResult_WithBooks()
-        {
-            // Arrange
-            var books = new List<BookDto>
+            _sut = new BooksController(_bookService.Object, _logger.Object)
             {
-                new() { Id = 1, Title = "Test Book 1", Author = "Author 1" },
-                new() { Id = 2, Title = "Test Book 2", Author = "Author 2" }
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
-            _mockBookService.Setup(s => s.GetAllBooksAsync(null, null, null))
-                .ReturnsAsync(books);
 
-            // Act
-            var result = await _controller.GetBooks();
-
-            // Assert
-            result.Result.Should().BeOfType<OkObjectResult>();
-            var okResult = result.Result as OkObjectResult;
-            okResult!.Value.Should().BeEquivalentTo(books);
+            // ensure HttpContext.TraceIdentifier is present (controller uses it)
+            _sut.HttpContext.TraceIdentifier = "test-trace-id";
         }
 
         [Fact]
-        public async Task GetBook_ShouldReturnOkResult_WhenBookExists()
+        public async Task GetBooks_Forwards_Filters_To_Service()
         {
             // Arrange
-            var book = new BookDto { Id = 1, Title = "Test Book", Author = "Test Author" };
-            _mockBookService.Setup(s => s.GetBookByIdAsync(1))
-                .ReturnsAsync(book);
+            var genre = "Fantasy";
+            int? year = 2023;
+            double? minRating = 4.5;
+
+            var all = new List<BookDto>
+            {
+                new() { Id = 1, Title = "F1", Author = "A1" },
+                new() { Id = 2, Title = "F2", Author = "A2" },
+            };
+
+            _bookService
+                .Setup(s => s.GetAllBooksAsync(genre, year, minRating))
+                .ReturnsAsync(all);
 
             // Act
-            var result = await _controller.GetBook(1);
+            var action = await _sut.GetBooks(genre, year, minRating, page: 1, pageSize: 10);
 
             // Assert
-            result.Result.Should().BeOfType<OkObjectResult>();
-            var okResult = result.Result as OkObjectResult;
-            okResult!.Value.Should().BeEquivalentTo(book);
+            action.Result.Should().BeOfType<OkObjectResult>();
+            _bookService.Verify(s => s.GetAllBooksAsync(genre, year, minRating), Times.Once);
         }
 
         [Fact]
-        public async Task GetBook_ShouldReturnNotFound_WhenBookDoesNotExist()
+        public async Task DeleteBook_WhenExists_Returns204()
         {
-            // Arrange
-            _mockBookService.Setup(s => s.GetBookByIdAsync(1))
-                .ReturnsAsync((BookDto?)null);
+            _bookService.Setup(s => s.DeleteBookAsync(7)).ReturnsAsync(true);
 
-            // Act
-            var result = await _controller.GetBook(1);
+            var result = await _sut.DeleteBook(7);
 
-            // Assert
-            result.Result.Should().BeOfType<NotFoundObjectResult>();
+            result.Should().BeOfType<NoContentResult>();
+        }
+
+        [Fact]
+        public async Task GetBooks_WhenException_LogsAndReturns500()
+        {
+            _bookService.Setup(s => s.GetAllBooksAsync(null, null, null))
+                        .ThrowsAsync(new Exception("kaboom"));
+
+            var action = await _sut.GetBooks();
+
+            // Assert 500 with ApiResponse<object>
+            action.Result.Should().BeOfType<ObjectResult>();
+            var obj = (ObjectResult)action.Result!;
+            obj.StatusCode.Should().Be(500);
+            obj.Value.Should().BeOfType<ApiResponse<object>>();
+
+            // Verify we logged error at least once
+            _logger.Verify(
+                x => x.Log(
+                    It.Is<LogLevel>(l => l == LogLevel.Error),
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Error occurred while fetching books")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
         }
     }
 }
