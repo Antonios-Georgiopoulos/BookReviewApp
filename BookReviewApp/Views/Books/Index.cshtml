@@ -1,0 +1,193 @@
+﻿@model BookReviewApp.Models.ViewModels.BookListViewModel
+
+@{
+    ViewData["Title"] = "Βιβλία";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-book"></i> Βιβλία</h2>
+        <p class="text-muted">Ανακαλύψτε και αξιολογήστε βιβλία</p>
+    </div>
+    <div class="col-md-4 text-end">
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Προσθήκη Βιβλίου
+            </a>
+        }
+    </div>
+</div>
+
+<!-- Φίλτρα και Αναζήτηση -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Φίλτρα και Αναζήτηση</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="searchTerm" class="form-label">Αναζήτηση</label>
+                    <input asp-for="SearchTerm" class="form-control" placeholder="Τίτλος ή συγγραφέας...">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="SelectedGenre" class="form-label">Είδος</label>
+                    <select asp-for="SelectedGenre" name="genre" class="form-select" asp-items="Model.GenreOptions">
+                        <option value="">Όλα</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="PublishedYear" class="form-label">Έτος</label>
+                    <select asp-for="PublishedYear" name="year" class="form-select" asp-items="Model.YearOptions">
+                        <option value="">Όλα</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="MinRating" class="form-label">Ελάχιστη Βαθμολογία</label>
+                    <select asp-for="MinRating" class="form-select">
+                        <option value="">Όλες</option>
+                        <option value="1">1+ αστέρια</option>
+                        <option value="2">2+ αστέρια</option>
+                        <option value="3">3+ αστέρια</option>
+                        <option value="4">4+ αστέρια</option>
+                        <option value="5">5 αστέρια</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="SortBy" class="form-label">Ταξινόμηση</label>
+                    <select asp-for="SortBy" class="form-select" asp-items="Model.SortOptions"></select>
+                </div>
+
+                <div class="col-md-1">
+                    <label for="SortOrder" class="form-label">Σειρά</label>
+                    <select asp-for="SortOrder" class="form-select">
+                        <option value="asc">Αύξουσα</option>
+                        <option value="desc">Φθίνουσα</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Αναζήτηση
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Καθαρισμός
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Αποτελέσματα -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">
+                Εμφανίζονται @Model.Books.Count() από @Model.TotalBooks βιβλία
+            </span>
+
+            <!-- View Toggle Buttons -->
+            <div class="btn-group view-toggle-group" role="group">
+                <button type="button" class="btn btn-outline-primary view-toggle active" data-mode="grid">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button type="button" class="btn btn-outline-primary view-toggle" data-mode="list">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+
+        @if (!Model.Books.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                <h4>Δεν βρέθηκαν βιβλία</h4>
+                <p class="text-muted">Δοκιμάστε να αλλάξετε τα κριτήρια αναζήτησης ή προσθέστε ένα νέο βιβλίο.</p>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Προσθήκη Βιβλίου
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="book-list-view grid-view">
+                <div class="row">
+                    @foreach (var book in Model.Books)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <partial name="_BookCard" model="book" />
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Σελιδοποίηση βιβλίων" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-genre="@Model.SelectedGenre"
+                               asp-route-year="@Model.PublishedYear"
+                               asp-route-minRating="@Model.MinRating"
+                               asp-route-sortBy="@Model.SortBy"
+                               asp-route-sortOrder="@Model.SortOrder"
+                               asp-route-page="@(Model.CurrentPage - 1)">
+                                <i class="fas fa-chevron-left"></i> Προηγ.
+                            </a>
+                        </li>
+                    }
+
+                    @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-genre="@Model.SelectedGenre"
+                               asp-route-year="@Model.PublishedYear"
+                               asp-route-minRating="@Model.MinRating"
+                               asp-route-sortBy="@Model.SortBy"
+                               asp-route-sortOrder="@Model.SortOrder"
+                               asp-route-page="@i">@i</a>
+                        </li>
+                    }
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-genre="@Model.SelectedGenre"
+                               asp-route-year="@Model.PublishedYear"
+                               asp-route-minRating="@Model.MinRating"
+                               asp-route-sortBy="@Model.SortBy"
+                               asp-route-sortOrder="@Model.SortOrder"
+                               asp-route-page="@(Model.CurrentPage + 1)">
+                                Επόμ. <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

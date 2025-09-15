@@ -1,0 +1,117 @@
+﻿@model BookReviewApp.Models.ViewModels.BookViewModel
+
+@{
+    ViewData["Title"] = "Προσθήκη Βιβλίου";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus"></i> Προσθήκη Νέου Βιβλίου
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Τίτλος *</label>
+                        <input asp-for="Title" class="form-control" placeholder="Εισάγετε τον τίτλο του βιβλίου">
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Author" class="form-label">Συγγραφέας *</label>
+                        <input asp-for="Author" class="form-control" placeholder="Εισάγετε το όνομα του συγγραφέα">
+                        <span asp-validation-for="Author" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="PublishedYear" class="form-label">Έτος Έκδοσης *</label>
+                                <input asp-for="PublishedYear" type="number" class="form-control"
+                                       min="1000" max="2100" placeholder="π.χ. 2023">
+                                <span asp-validation-for="PublishedYear" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Genre" class="form-label">Είδος *</label>
+                                <select asp-for="Genre" class="form-select">
+                                    <option value="">Επιλέξτε είδος</option>
+                                    <option value="Μυθιστόρημα">Μυθιστόρημα</option>
+                                    <option value="Φαντασίας">Φαντασίας</option>
+                                    <option value="Επιστημονική Φαντασία">Επιστημονική Φαντασία</option>
+                                    <option value="Μυστήριο">Μυστήριο</option>
+                                    <option value="Θρίλερ">Θρίλερ</option>
+                                    <option value="Ρομάντζο">Ρομάντζο</option>
+                                    <option value="Βιογραφία">Βιογραφία</option>
+                                    <option value="Ιστορικό">Ιστορικό</option>
+                                    <option value="Φιλοσοφία">Φιλοσοφία</option>
+                                    <option value="Ψυχολογία">Ψυχολογία</option>
+                                    <option value="Επιχειρήσεις">Επιχειρήσεις</option>
+                                    <option value="Αυτοβελτίωση">Αυτοβελτίωση</option>
+                                    <option value="Τεχνολογία">Τεχνολογία</option>
+                                    <option value="Επιστήμη">Επιστήμη</option>
+                                    <option value="Τέχνη">Τέχνη</option>
+                                    <option value="Ταξίδια">Ταξίδια</option>
+                                    <option value="Μαγειρική">Μαγειρική</option>
+                                    <option value="Υγεία">Υγεία</option>
+                                    <option value="Παιδικό">Παιδικό</option>
+                                    <option value="Εκπαιδευτικό">Εκπαιδευτικό</option>
+                                    <option value="Άλλο">Άλλο</option>
+                                </select>
+                                <span asp-validation-for="Genre" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Σημείωση:</strong> Όλα τα πεδία με αστερίσκο (*) είναι υποχρεωτικά.
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Ακύρωση
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Δημιουργία Βιβλίου
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function() {
+            $('#Title').focus();
+
+            $('#Genre').change(function() {
+                if ($(this).val() === 'Άλλο') {
+                    if ($('#custom-genre-input').length === 0) {
+                        var customInput = '<div id="custom-genre-input" class="mt-2">' +
+                            '<input type="text" id="CustomGenre" class="form-control" placeholder="Εισάγετε το είδος">' +
+                            '</div>';
+                        $(this).parent().append(customInput);
+
+                        $('#CustomGenre').on('input', function() {
+                            $('#Genre').val($(this).val());
+                        });
+                    }
+                } else {
+                    $('#custom-genre-input').remove();
+                }
+            });
+        });
+    </script>
+}

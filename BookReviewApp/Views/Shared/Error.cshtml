@@ -1,0 +1,48 @@
+﻿@model BookReviewApp.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Σφάλμα";
+}
+
+<div class="text-center">
+    <h1 class="display-1 text-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+    </h1>
+    <h2 class="display-4">Ups! Κάτι πήγε στραβά</h2>
+    <p class="lead text-muted">
+        Παρουσιάστηκε ένα απροσδόκητο σφάλμα. Παρακαλούμε δοκιμάστε ξανά αργότερα.
+    </p>
+
+    @if (Model.ShowRequestId)
+    {
+        <div class="alert alert-info mt-4">
+            <strong>Request ID:</strong> <code>@Model.RequestId</code>
+            <br>
+            <small class="text-muted">
+                Παρακαλούμε αναφέρετε αυτόν τον κωδικό αν επικοινωνήσετε με την υποστήριξη.
+            </small>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-home"></i> Επιστροφή στην Αρχική
+        </a>
+        <button onclick="history.back()" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Πίσω
+        </button>
+    </div>
+</div>
+
+<style>
+    .display-1 {
+        font-size: 6rem;
+        margin-bottom: 2rem;
+    }
+
+    .error-page-container {
+        min-height: 60vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>

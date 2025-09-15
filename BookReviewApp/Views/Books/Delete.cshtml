@@ -1,0 +1,126 @@
+﻿@model BookReviewApp.Models.ViewModels.BookViewModel
+
+@{
+    ViewData["Title"] = "Διαγραφή Βιβλίου";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Επιβεβαίωση Διαγραφής
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-warning"></i> Προσοχή!</h5>
+                    <p class="mb-0">
+                        Είστε βέβαιος ότι θέλετε να διαγράψετε αυτό το βιβλίο;
+                        <strong>Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</strong>
+                    </p>
+                </div>
+
+                <!-- Στοιχεία Βιβλίου -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@Model.Author</h6>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted">Είδος:</small><br>
+                                <span class="badge bg-secondary">@Model.Genre</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Έτος Έκδοσης:</small><br>
+                                <span class="badge bg-info">@Model.PublishedYear</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Αριθμός Κριτικών:</small><br>
+                                <strong>@Model.ReviewCount</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Μέση Αξιολόγηση:</small><br>
+                                @if (Model.AverageRating > 0)
+                                {
+                                    <strong>@Model.AverageRating.ToString("F1") <i class="fas fa-star text-warning"></i></strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Χωρίς αξιολόγηση</span>
+                                }
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">Ημερομηνία Προσθήκης:</small><br>
+                                <strong>@Model.DateCreated.ToString("dd/MM/yyyy HH:mm")</strong>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">ID Βιβλίου:</small><br>
+                                <code>#@Model.Id</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Επιπτώσεις Διαγραφής -->
+                @if (Model.ReviewCount > 0)
+                {
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-info-circle"></i> Επιπτώσεις Διαγραφής</h6>
+                        <ul class="mb-0">
+                            <li>Θα διαγραφούν <strong>@Model.ReviewCount κριτικές</strong> που σχετίζονται με αυτό το βιβλίο</li>
+                            <li>Θα διαγραφούν όλες οι ψήφοι (likes/dislikes) στις κριτικές</li>
+                            <li>Τα δεδομένα δεν θα μπορούν να ανακτηθούν</li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Αυτό το βιβλίο δεν έχει κριτικές, οπότε η διαγραφή δεν θα επηρεάσει άλλα δεδομένα.
+                    </div>
+                }
+
+                <!-- Κουμπιά Ενεργειών -->
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <input asp-for="Id" type="hidden" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Ακύρωση
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> Πίσω στη Λίστα
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteButton">
+                            <i class="fas fa-trash"></i> Οριστική Διαγραφή
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#deleteButton').click(function(e) {
+                e.preventDefault();
+
+                if (confirm('ΤΕΛΕΥΤΑΙΑ ΠΡΟΕΙΔΟΠΟΙΗΣΗ!\n\nΕίστε απόλυτα βέβαιος ότι θέλετε να διαγράψετε το βιβλίο \nΑυτή η ενέργεια θα διαγράψει:\n- Το βιβλίο\n- Όλες τις κριτικές (@Model.ReviewCount)\n- Όλες τις ψήφους\n\nΔεν θα μπορείτε να το αναιρέσετε!')) {
+                    // Αφαίρεσε τον event listener για να μην παρεμβαίνει
+                    $(this).off('click');
+                    // Υποβολή της φόρμας
+                    $(this).closest('form')[0].submit();
+                }
+            });
+        });
+    </script>
+}

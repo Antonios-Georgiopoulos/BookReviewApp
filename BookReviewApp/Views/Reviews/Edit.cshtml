@@ -1,0 +1,126 @@
+﻿@model BookReviewApp.Models.ViewModels.Api.CreateReviewDto
+
+@{
+    ViewData["Title"] = "Επεξεργασία Κριτικής";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-edit"></i> Επεξεργασία Κριτικής
+                </h4>
+                <small class="text-muted">Για το βιβλίο: <strong>@ViewBag.BookTitle</strong></small>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@ViewBag.ReviewId" method="post">
+                    <input asp-for="BookId" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Rating" class="form-label">Αξιολόγηση *</label>
+                        <div class="rating-input">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <input type="radio" asp-for="Rating" value="@i" id="rating@(i)" />
+                                <label for="rating@(i)" class="star-label">
+                                    <i class="fas fa-star"></i>
+                                </label>
+                            }
+                        </div>
+                        <small class="form-text text-muted">Επιλέξτε από 1 έως 5 αστέρια</small>
+                        <span asp-validation-for="Rating" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Content" class="form-label">Κριτική *</label>
+                        <textarea asp-for="Content" class="form-control" rows="6"
+                                  placeholder="Ενημερώστε την κριτική σας για αυτό το βιβλίο..."></textarea>
+                        <div class="form-text">
+                            <span id="charCount">@(Model.Content?.Length ?? 0)</span> / 2000 χαρακτήρες
+                        </div>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Σημείωση:</strong> Η επεξεργασία της κριτικής σας θα είναι ορατή σε όλους τους χρήστες.
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-controller="Books" asp-action="Details" asp-route-id="@Model.BookId" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Ακύρωση
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Ενημέρωση Κριτικής
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function() {
+            var textarea = $('#Content');
+            var charCount = $('#charCount');
+
+            textarea.on('input', function() {
+                var length = $(this).val().length;
+                charCount.text(length);
+
+                if (length > 2000) {
+                    charCount.addClass('text-danger');
+                } else if (length > 1800) {
+                    charCount.addClass('text-warning').removeClass('text-danger');
+                } else {
+                    charCount.removeClass('text-danger text-warning');
+                }
+            });
+
+            $('.rating-input input[type="radio"]').change(function() {
+                var rating = $(this).val();
+                updateStars(rating);
+            });
+
+            var currentRating = $('input[name="Rating"]:checked').val();
+            if (currentRating) {
+                updateStars(currentRating);
+            }
+
+            function updateStars(rating) {
+                $('.star-label').each(function(index) {
+                    var star = $(this).find('i');
+                    if (index < rating) {
+                        star.removeClass('text-muted').addClass('text-warning');
+                    } else {
+                        star.removeClass('text-warning').addClass('text-muted');
+                    }
+                });
+            }
+
+            textarea.focus();
+
+            var formChanged = false;
+
+            $('input, textarea, select').on('input change', function() {
+                formChanged = true;
+            });
+
+            $('button[type="submit"]').on('click', function() {
+                formChanged = false;
+            });
+
+            $(window).on('beforeunload', function() {
+                if (formChanged) {
+                    return 'Έχετε μη αποθηκευμένες αλλαγές. Είστε βέβαιος ότι θέλετε να φύγετε;';
+                }
+            });
+        });
+    </script>
+}
