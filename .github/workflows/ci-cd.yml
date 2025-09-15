@@ -2,9 +2,14 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop, feature/*]
+    branches:
+      - main
+      - develop
+      - 'feature/*'
   pull_request:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
 
 env:
   DOTNET_VERSION: '9.0.x'
@@ -15,6 +20,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Test Application
+
+    permissions:
+      contents: read
+      checks: write         # allow Check Run on same-repo push/PR
+      pull-requests: write  # (not used on forks due to read-only token)
 
     steps:
       - uses: actions/checkout@v4
@@ -31,57 +41,66 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal --logger trx --results-directory TestResults
+        run: dotnet test --no-build --configuration Release --verbosity normal \
+              --logger "trx;LogFileName=test-results.trx" \
+              --results-directory ./TestResults
 
-      - name: Publish test results (PR review fallback)
-        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+      - name: Publish test results (as Check)
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
         uses: dorny/test-reporter@v1
         with:
           name: .NET Tests
           path: ./TestResults/**/*.trx
-          reporter: github-pr-review
+          reporter: dotnet-trx
           fail-on-error: false
 
+      # Forked PRs: cannot write checks/comments; keep results via artifact
+      - name: Upload TRX as artifact (fork PRs)
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-results
+          path: ./TestResults/**/*.trx
+          if-no-files-found: error
+          retention-days: 7
+
   security-scan:
-  runs-on: ubuntu-latest
-  name: Security Scan
+    runs-on: ubuntu-latest
+    name: Security Scan
 
-  # minimal perms for this job
-  permissions:
-    contents: read
-    security-events: write # needed to upload SARIF to Code Scanning
+    permissions:
+      contents: read
+      security-events: write   # needed to upload SARIF to Code Scanning
 
-  steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.24.0
-      with:
-        scan-type: 'fs'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH,MEDIUM'
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          format: sarif
+          output: trivy-results.sarif
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH,MEDIUM
 
-    # Upload to the Security tab for same-repo pushes/PRs
-    - name: Upload Trivy scan results to GitHub Security tab
-      if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: trivy-results.sarif
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
 
-    # Fallback for forked PRs (no write perms) – keep results visible
-    - name: Attach SARIF as artifact (fork PRs)
-      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
-      uses: actions/upload-artifact@v4
-      with:
-        name: trivy-results
-        path: trivy-results.sarif
-        if-no-files-found: ignore
-        retention-days: 7
+      - name: Attach SARIF as artifact (fork PRs)
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+          if-no-files-found: ignore
+          retention-days: 7
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -135,4 +154,3 @@ jobs:
         run: |
           echo "Deploying to staging environment..."
           echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-          # Add your deployment commands here
