@@ -40,9 +40,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 .AddDefaultUI();
 
 builder.Services.AddControllersWithViews();
-
 builder.Services.AddControllers();
-
 builder.Services.AddRazorPages();
 
 builder.Services.AddScoped<IBookService, BookService>();
@@ -52,15 +50,27 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Book Review API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme.",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
 });
 
 var app = builder.Build();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Book Review API v1"));
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Book Review API v1");
+        c.RoutePrefix = "swagger";
+    });
 }
 else
 {
@@ -81,7 +91,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllers();
-
 app.MapRazorPages();
 
 using (var scope = app.Services.CreateScope())
@@ -95,7 +104,14 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while seeding the database.");
+
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
     }
 }
 
 app.Run();
+
+public partial class Program { }

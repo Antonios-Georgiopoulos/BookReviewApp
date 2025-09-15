@@ -6,16 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace BookReviewApp.Controllers.Api
 {
     [Route("api/[controller]")]
-    [ApiController]
-    public class BooksController : ControllerBase
+    public class BooksController : BaseController
     {
         private readonly IBookService _bookService;
-        private readonly ILogger<BooksController> _logger;
 
         public BooksController(IBookService bookService, ILogger<BooksController> logger)
+            : base(logger)
         {
             _bookService = bookService;
-            _logger = logger;
         }
 
         [HttpGet]
@@ -31,8 +29,7 @@ namespace BookReviewApp.Controllers.Api
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching books");
-                return StatusCode(500, "An error occurred while processing your request.");
+                return HandleException<IEnumerable<BookDto>>(ex, "fetching books");
             }
         }
 
@@ -45,15 +42,14 @@ namespace BookReviewApp.Controllers.Api
 
                 if (book == null)
                 {
-                    return NotFound($"Book with ID {id} not found.");
+                    return HandleNotFound<BookDto>("Book", id);
                 }
 
                 return Ok(book);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching book {BookId}", id);
-                return StatusCode(500, "An error occurred while processing your request.");
+                return HandleException<BookDto>(ex, $"fetching book {id}");
             }
         }
 
@@ -73,8 +69,7 @@ namespace BookReviewApp.Controllers.Api
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating book");
-                return StatusCode(500, "An error occurred while processing your request.");
+                return HandleException<BookDto>(ex, "creating book");
             }
         }
 
@@ -93,15 +88,14 @@ namespace BookReviewApp.Controllers.Api
 
                 if (book == null)
                 {
-                    return NotFound($"Book with ID {id} not found.");
+                    return HandleNotFound<BookDto>("Book", id);
                 }
 
                 return Ok(book);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating book {BookId}", id);
-                return StatusCode(500, "An error occurred while processing your request.");
+                return HandleException<BookDto>(ex, $"updating book {id}");
             }
         }
 
@@ -115,15 +109,14 @@ namespace BookReviewApp.Controllers.Api
 
                 if (!result)
                 {
-                    return NotFound($"Book with ID {id} not found.");
+                    return HandleNotFound("Book", id);
                 }
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while deleting book {BookId}", id);
-                return StatusCode(500, "An error occurred while processing your request.");
+                return HandleException(ex, $"deleting book {id}");
             }
         }
     }

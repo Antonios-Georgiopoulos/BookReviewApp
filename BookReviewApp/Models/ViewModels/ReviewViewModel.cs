@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BookReviewApp.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookReviewApp.Models.ViewModels
 {
@@ -6,15 +7,15 @@ namespace BookReviewApp.Models.ViewModels
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Η κριτική είναι υποχρεωτική")]
+        [Required(ErrorMessage = ValidationMessages.ReviewContentRequired)]
         [Display(Name = "Κριτική")]
         [StringLength(2000, MinimumLength = 10,
-            ErrorMessage = "Η κριτική πρέπει να είναι μεταξύ 10 και 2000 χαρακτήρων")]
+            ErrorMessage = ValidationMessages.ReviewRange)]
         public string Content { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Η αξιολόγηση είναι υποχρεωτική")]
+        [Required(ErrorMessage = ValidationMessages.RatingRequired)]
         [Display(Name = "Αξιολόγηση")]
-        [Range(1, 5, ErrorMessage = "Η αξιολόγηση πρέπει να είναι από 1 έως 5 αστέρια")]
+        [Range(1, 5, ErrorMessage = ValidationMessages.RatingRange)]
         public int Rating { get; set; }
 
         [Display(Name = "Ημερομηνία")]

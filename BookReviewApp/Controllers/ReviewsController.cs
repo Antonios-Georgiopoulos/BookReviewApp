@@ -1,4 +1,5 @@
-﻿using BookReviewApp.Models.ViewModels.Api;
+﻿using BookReviewApp.Common;
+using BookReviewApp.Models.ViewModels.Api;
 using BookReviewApp.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -59,8 +60,8 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching review for edit {ReviewId}", id);
-                TempData["Error"] = "Παρουσιάστηκε σφάλμα κατά τη φόρτωση της κριτικής για επεξεργασία.";
-                return RedirectToAction("Index", "Books");
+                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη φόρτωση της κριτικής για επεξεργασία.";
+                return RedirectToAction(ActionNames.Index, ControllerNames.Books);
             }
         }
 
@@ -89,8 +90,8 @@ namespace BookReviewApp.Controllers
                     return NotFound();
                 }
 
-                TempData["Success"] = "Η κριτική ενημερώθηκε επιτυχώς!";
-                return RedirectToAction("Details", "Books", new { id = model.BookId });
+                TempData[TempDataKeys.Success] = SuccessMessages.ReviewUpdated;
+                return RedirectToAction(ActionNames.Details, ControllerNames.Books, new { id = model.BookId });
             }
             catch (UnauthorizedAccessException)
             {
@@ -121,25 +122,25 @@ namespace BookReviewApp.Controllers
                 var result = await _reviewService.DeleteReviewAsync(id, userId);
                 if (!result)
                 {
-                    TempData["Error"] = "Η κριτική δεν βρέθηκε.";
+                    TempData[TempDataKeys.Error] = "Η κριτική δεν βρέθηκε.";
                 }
                 else
                 {
-                    TempData["Success"] = "Η κριτική διαγράφηκε επιτυχώς!";
+                    TempData[TempDataKeys.Success] = SuccessMessages.ReviewDeleted;
                 }
 
-                return RedirectToAction("Details", "Books", new { id = bookId });
+                return RedirectToAction(ActionNames.Details, ControllerNames.Books, new { id = bookId });
             }
             catch (UnauthorizedAccessException)
             {
-                TempData["Error"] = "Δεν έχετε δικαίωμα να διαγράψετε αυτή την κριτική.";
-                return RedirectToAction("Details", "Books", new { id = bookId });
+                TempData[TempDataKeys.Error] = "Δεν έχετε δικαίωμα να διαγράψετε αυτή την κριτική.";
+                return RedirectToAction(ActionNames.Details, ControllerNames.Books, new { id = bookId });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while deleting review {ReviewId}", id);
-                TempData["Error"] = "Παρουσιάστηκε σφάλμα κατά τη διαγραφή της κριτικής.";
-                return RedirectToAction("Details", "Books", new { id = bookId });
+                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη διαγραφή της κριτικής.";
+                return RedirectToAction(ActionNames.Details, ControllerNames.Books, new { id = bookId });
             }
         }
 

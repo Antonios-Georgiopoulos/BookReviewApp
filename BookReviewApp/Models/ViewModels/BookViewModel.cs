@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BookReviewApp.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookReviewApp.Models.ViewModels
 {
@@ -6,24 +7,24 @@ namespace BookReviewApp.Models.ViewModels
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Ο τίτλος είναι υποχρεωτικός")]
+        [Required(ErrorMessage = ValidationMessages.TitleRequired)]
         [Display(Name = "Τίτλος")]
-        [StringLength(200, ErrorMessage = "Ο τίτλος δεν μπορεί να υπερβαίνει τους 200 χαρακτήρες")]
+        [StringLength(200, ErrorMessage = ValidationMessages.TitleRange)]
         public string Title { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Ο συγγραφέας είναι υποχρεωτικός")]
+        [Required(ErrorMessage = ValidationMessages.AuthorRequired)]
         [Display(Name = "Συγγραφέας")]
-        [StringLength(100, ErrorMessage = "Το όνομα του συγγραφέα δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")]
+        [StringLength(100, ErrorMessage = ValidationMessages.AuthorRange)]
         public string Author { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Το έτος έκδοσης είναι υποχρεωτικό")]
+        [Required(ErrorMessage = ValidationMessages.YearRequired)]
         [Display(Name = "Έτος Έκδοσης")]
-        [Range(1000, 2100, ErrorMessage = "Το έτος πρέπει να είναι μεταξύ 1000 και 2100")]
+        [Range(1000, 2100, ErrorMessage = ValidationMessages.YearRange)]
         public int PublishedYear { get; set; }
 
-        [Required(ErrorMessage = "Το είδος είναι υποχρεωτικό")]
+        [Required(ErrorMessage = ValidationMessages.GenreRequired)]
         [Display(Name = "Είδος")]
-        [StringLength(50, ErrorMessage = "Το είδος δεν μπορεί να υπερβαίνει τους 50 χαρακτήρες")]
+        [StringLength(50, ErrorMessage = ValidationMessages.GenreRange)]
         public string Genre { get; set; } = string.Empty;
 
         [Display(Name = "Ημερομηνία Δημιουργίας")]
