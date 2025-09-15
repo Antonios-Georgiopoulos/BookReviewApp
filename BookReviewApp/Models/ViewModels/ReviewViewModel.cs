@@ -8,36 +8,36 @@ namespace BookReviewApp.Models.ViewModels
         public int Id { get; set; }
 
         [Required(ErrorMessage = ValidationMessages.ReviewContentRequired)]
-        [Display(Name = "Κριτική")]
+        [Display(Name = "Review")]
         [StringLength(2000, MinimumLength = 10,
             ErrorMessage = ValidationMessages.ReviewRange)]
         public string Content { get; set; } = string.Empty;
 
         [Required(ErrorMessage = ValidationMessages.RatingRequired)]
-        [Display(Name = "Αξιολόγηση")]
+        [Display(Name = "Rating")]
         [Range(1, 5, ErrorMessage = ValidationMessages.RatingRange)]
         public int Rating { get; set; }
 
-        [Display(Name = "Ημερομηνία")]
+        [Display(Name = "Date")]
         public DateTime DateCreated { get; set; }
 
         public int BookId { get; set; }
 
-        [Display(Name = "Βιβλίο")]
+        [Display(Name = "Book")]
         public string BookTitle { get; set; } = string.Empty;
 
         public string UserId { get; set; } = string.Empty;
 
-        [Display(Name = "Χρήστης")]
+        [Display(Name = "User")]
         public string UserName { get; set; } = string.Empty;
 
-        [Display(Name = "Θετικές Ψήφοι")]
+        [Display(Name = "Upvotes")]
         public int UpvoteCount { get; set; }
 
-        [Display(Name = "Αρνητικές Ψήφοι")]
+        [Display(Name = "Downvotes")]
         public int DownvoteCount { get; set; }
 
-        [Display(Name = "Συνολικές Ψήφοι")]
+        [Display(Name = "Net Votes")]
         public int NetVotes => UpvoteCount - DownvoteCount;
 
         public bool? UserVote { get; set; } // null = no vote, true = upvote, false = downvote

@@ -1,73 +1,73 @@
 ﻿@model BookReviewApp.Models.ViewModels.BookListViewModel
 
 @{
-    ViewData["Title"] = "Βιβλία";
+    ViewData["Title"] = "Books";
 }
 
 <div class="row mb-4">
     <div class="col-md-8">
-        <h2><i class="fas fa-book"></i> Βιβλία</h2>
-        <p class="text-muted">Ανακαλύψτε και αξιολογήστε βιβλία</p>
+        <h2><i class="fas fa-book"></i> Books</h2>
+        <p class="text-muted">Discover and review books</p>
     </div>
     <div class="col-md-4 text-end">
         @if (User.Identity.IsAuthenticated)
         {
             <a asp-action="Create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Προσθήκη Βιβλίου
+                <i class="fas fa-plus"></i> Add Book
             </a>
         }
     </div>
 </div>
 
-<!-- Φίλτρα και Αναζήτηση -->
+<!-- Filters and Search -->
 <div class="card mb-4">
     <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-filter"></i> Φίλτρα και Αναζήτηση</h5>
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Filters and Search</h5>
     </div>
     <div class="card-body">
         <form method="get" asp-action="Index">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label for="searchTerm" class="form-label">Αναζήτηση</label>
-                    <input asp-for="SearchTerm" class="form-control" placeholder="Τίτλος ή συγγραφέας...">
+                    <label for="searchTerm" class="form-label">Search</label>
+                    <input asp-for="SearchTerm" class="form-control" placeholder="Title or author...">
                 </div>
 
                 <div class="col-md-2">
-                    <label for="SelectedGenre" class="form-label">Είδος</label>
+                    <label for="SelectedGenre" class="form-label">Genre</label>
                     <select asp-for="SelectedGenre" name="genre" class="form-select" asp-items="Model.GenreOptions">
-                        <option value="">Όλα</option>
+                        <option value="">All</option>
                     </select>
                 </div>
 
                 <div class="col-md-2">
-                    <label for="PublishedYear" class="form-label">Έτος</label>
+                    <label for="PublishedYear" class="form-label">Year</label>
                     <select asp-for="PublishedYear" name="year" class="form-select" asp-items="Model.YearOptions">
-                        <option value="">Όλα</option>
+                        <option value="">All</option>
                     </select>
                 </div>
 
                 <div class="col-md-2">
-                    <label for="MinRating" class="form-label">Ελάχιστη Βαθμολογία</label>
+                    <label for="MinRating" class="form-label">Minimum Rating</label>
                     <select asp-for="MinRating" class="form-select">
-                        <option value="">Όλες</option>
-                        <option value="1">1+ αστέρια</option>
-                        <option value="2">2+ αστέρια</option>
-                        <option value="3">3+ αστέρια</option>
-                        <option value="4">4+ αστέρια</option>
-                        <option value="5">5 αστέρια</option>
+                        <option value="">All</option>
+                        <option value="1">1+ stars</option>
+                        <option value="2">2+ stars</option>
+                        <option value="3">3+ stars</option>
+                        <option value="4">4+ stars</option>
+                        <option value="5">5 stars</option>
                     </select>
                 </div>
 
                 <div class="col-md-2">
-                    <label for="SortBy" class="form-label">Ταξινόμηση</label>
+                    <label for="SortBy" class="form-label">Sort By</label>
                     <select asp-for="SortBy" class="form-select" asp-items="Model.SortOptions"></select>
                 </div>
 
                 <div class="col-md-1">
-                    <label for="SortOrder" class="form-label">Σειρά</label>
+                    <label for="SortOrder" class="form-label">Order</label>
                     <select asp-for="SortOrder" class="form-select">
-                        <option value="asc">Αύξουσα</option>
-                        <option value="desc">Φθίνουσα</option>
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
                     </select>
                 </div>
             </div>
@@ -75,10 +75,10 @@
             <div class="row mt-3">
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Αναζήτηση
+                        <i class="fas fa-search"></i> Search
                     </button>
                     <a asp-action="Index" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Καθαρισμός
+                        <i class="fas fa-times"></i> Clear
                     </a>
                 </div>
             </div>
@@ -86,12 +86,36 @@
     </div>
 </div>
 
-<!-- Αποτελέσματα -->
+<!-- Message for non-authenticated users -->
+@if (!User.Identity.IsAuthenticated)
+{
+    <div class="alert alert-primary">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5><i class="fas fa-info-circle"></i> Welcome to Book Review App!</h5>
+                <p class="mb-0">
+                    To add books, write reviews, and vote on other users' reviews,
+                    please register or sign in.
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary me-2">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Results -->
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-muted">
-                Εμφανίζονται @Model.Books.Count() από @Model.TotalBooks βιβλία
+                Showing @Model.Books.Count() of @Model.TotalBooks books
             </span>
 
             <!-- View Toggle Buttons -->
@@ -109,13 +133,21 @@
         {
             <div class="text-center py-5">
                 <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
-                <h4>Δεν βρέθηκαν βιβλία</h4>
-                <p class="text-muted">Δοκιμάστε να αλλάξετε τα κριτήρια αναζήτησης ή προσθέστε ένα νέο βιβλίο.</p>
+                <h4>No books found</h4>
+                <p class="text-muted">Try changing your search criteria or add a new book.</p>
                 @if (User.Identity.IsAuthenticated)
                 {
                     <a asp-action="Create" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Προσθήκη Βιβλίου
+                        <i class="fas fa-plus"></i> Add Book
                     </a>
+                }
+                else
+                {
+                    <div class="mt-3">
+                        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary me-2">
+                            <i class="fas fa-user-plus"></i> Register to add books
+                        </a>
+                    </div>
                 }
             </div>
         }
@@ -136,7 +168,7 @@
         <!-- Pagination -->
         @if (Model.TotalPages > 1)
         {
-            <nav aria-label="Σελιδοποίηση βιβλίων" class="mt-4">
+            <nav aria-label="Book pagination" class="mt-4">
                 <ul class="pagination justify-content-center">
                     @if (Model.CurrentPage > 1)
                     {
@@ -150,7 +182,7 @@
                                asp-route-sortBy="@Model.SortBy"
                                asp-route-sortOrder="@Model.SortOrder"
                                asp-route-page="@(Model.CurrentPage - 1)">
-                                <i class="fas fa-chevron-left"></i> Προηγ.
+                                <i class="fas fa-chevron-left"></i> Previous
                             </a>
                         </li>
                     }
@@ -182,7 +214,7 @@
                                asp-route-sortBy="@Model.SortBy"
                                asp-route-sortOrder="@Model.SortOrder"
                                asp-route-page="@(Model.CurrentPage + 1)">
-                                Επόμ. <i class="fas fa-chevron-right"></i>
+                                Next <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
                     }

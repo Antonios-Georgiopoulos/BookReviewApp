@@ -60,7 +60,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching review for edit {ReviewId}", id);
-                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη φόρτωση της κριτικής για επεξεργασία.";
+                TempData[TempDataKeys.Error] = "An error occurred while loading the review for editing.";
                 return RedirectToAction(ActionNames.Index, ControllerNames.Books);
             }
         }
@@ -100,7 +100,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating review {ReviewId}", id);
-                ModelState.AddModelError("", "Παρουσιάστηκε σφάλμα κατά την ενημέρωση της κριτικής.");
+                ModelState.AddModelError("", "An error occurred while updating the review.");
                 ViewBag.ReviewId = id;
                 ViewBag.BookTitle = await GetBookTitleAsync(model.BookId);
                 return View(model);
@@ -122,7 +122,7 @@ namespace BookReviewApp.Controllers
                 var result = await _reviewService.DeleteReviewAsync(id, userId);
                 if (!result)
                 {
-                    TempData[TempDataKeys.Error] = "Η κριτική δεν βρέθηκε.";
+                    TempData[TempDataKeys.Error] = "Review not found.";
                 }
                 else
                 {
@@ -133,13 +133,13 @@ namespace BookReviewApp.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                TempData[TempDataKeys.Error] = "Δεν έχετε δικαίωμα να διαγράψετε αυτή την κριτική.";
+                TempData[TempDataKeys.Error] = "You do not have permission to delete this review.";
                 return RedirectToAction(ActionNames.Details, ControllerNames.Books, new { id = bookId });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while deleting review {ReviewId}", id);
-                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη διαγραφή της κριτικής.";
+                TempData[TempDataKeys.Error] = "An error occurred while deleting the review.";
                 return RedirectToAction(ActionNames.Details, ControllerNames.Books, new { id = bookId });
             }
         }

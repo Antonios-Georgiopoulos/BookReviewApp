@@ -43,7 +43,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching books list");
-                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη φόρτωση των βιβλίων.";
+                TempData[TempDataKeys.Error] = "An error occurred while loading the books.";
                 return View(new BookListViewModel());
             }
         }
@@ -64,7 +64,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching book details for {BookId}", id);
-                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη φόρτωση των στοιχείων του βιβλίου.";
+                TempData[TempDataKeys.Error] = "An error occurred while loading the book details.";
                 return RedirectToAction(ActionNames.Index);
             }
         }
@@ -102,7 +102,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating book");
-                ModelState.AddModelError("", "Παρουσιάστηκε σφάλμα κατά τη δημιουργία του βιβλίου.");
+                ModelState.AddModelError("", "An error occurred while creating the book.");
                 return View(model);
             }
         }
@@ -135,7 +135,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching book for edit {BookId}", id);
-                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη φόρτωση του βιβλίου για επεξεργασία.";
+                TempData[TempDataKeys.Error] = "An error occurred while loading the book for editing.";
                 return RedirectToAction(ActionNames.Index);
             }
         }
@@ -177,7 +177,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating book {BookId}", id);
-                ModelState.AddModelError("", "Παρουσιάστηκε σφάλμα κατά την ενημέρωση του βιβλίου.");
+                ModelState.AddModelError("", "An error occurred while updating the book.");
                 return View(model);
             }
         }
@@ -210,7 +210,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching book for delete {BookId}", id);
-                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη φόρτωση του βιβλίου για διαγραφή.";
+                TempData[TempDataKeys.Error] = "An error occurred while loading the book for deletion.";
                 return RedirectToAction(ActionNames.Index);
             }
         }
@@ -225,7 +225,7 @@ namespace BookReviewApp.Controllers
                 var result = await _bookService.DeleteBookAsync(id);
                 if (!result)
                 {
-                    TempData[TempDataKeys.Error] = "Το βιβλίο δεν βρέθηκε.";
+                    TempData[TempDataKeys.Error] = "Book not found.";
                 }
                 else
                 {
@@ -237,7 +237,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while deleting book {BookId}", id);
-                TempData[TempDataKeys.Error] = "Παρουσιάστηκε σφάλμα κατά τη διαγραφή του βιβλίου.";
+                TempData[TempDataKeys.Error] = "An error occurred while deleting the book.";
                 return RedirectToAction(ActionNames.Index);
             }
         }
@@ -281,7 +281,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while adding review");
-                ModelState.AddModelError("", "Παρουσιάστηκε σφάλμα κατά την προσθήκη της κριτικής.");
+                ModelState.AddModelError("", "An error occurred while adding the review.");
             }
 
             var reloadedBookDetails = await _bookService.GetBookDetailsViewModelAsync(model.Book.Id, userId);
@@ -297,7 +297,7 @@ namespace BookReviewApp.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                return Json(new { success = false, message = "Δεν είστε συνδεδεμένος." });
+                return Json(new { success = false, message = "You are not logged in." });
             }
 
             try
@@ -309,7 +309,7 @@ namespace BookReviewApp.Controllers
                 }
                 else
                 {
-                    return Json(new { success = false, message = "Αποτυχία καταγραφής ψήφου." });
+                    return Json(new { success = false, message = "Failed to record vote." });
                 }
             }
             catch (InvalidOperationException ex)
@@ -319,7 +319,7 @@ namespace BookReviewApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while voting on review {ReviewId}", reviewId);
-                return Json(new { success = false, message = "Παρουσιάστηκε σφάλμα κατά την ψηφοφορία." });
+                return Json(new { success = false, message = "An error occurred while voting." });
             }
         }
     }

@@ -41,7 +41,7 @@ $(document).ready(function () {
 
         var counter = $('<div class="char-counter mt-1">' +
             '<span class="current">' + currentLength + '</span> / ' +
-            '<span class="max">' + maxLength + '</span> χαρακτήρες' +
+            '<span class="max">' + maxLength + '</span> characters' +
             '</div>');
 
         textarea.after(counter);
@@ -106,7 +106,7 @@ $(document).ready(function () {
         var form = $(this).closest('form');
         var action = $(this).text().trim();
 
-        if (confirm('Είστε βέβαιος ότι θέλετε να εκτελέσετε αυτή την ενέργεια: ' + action + '?')) {
+        if (confirm('Are you sure you want to perform this action: ' + action + '?')) {
             form.submit();
         }
     });
@@ -156,16 +156,16 @@ $(document).ready(function () {
             data: data,
             success: function (response) {
                 if (response.success) {
-                    showNotification('success', response.message || 'Η ενέργεια ολοκληρώθηκε επιτυχώς!');
+                    showNotification('success', response.message || 'Operation completed successfully!');
                     if (response.redirect) {
                         window.location.href = response.redirect;
                     }
                 } else {
-                    showNotification('error', response.message || 'Παρουσιάστηκε σφάλμα.');
+                    showNotification('error', response.message || 'An error occurred.');
                 }
             },
             error: function () {
-                showNotification('error', 'Παρουσιάστηκε σφάλμα στην επικοινωνία με τον διακομιστή.');
+                showNotification('error', 'An error occurred while communicating with the server.');
             }
         });
     });
@@ -241,7 +241,7 @@ $(document).ready(function () {
 
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text).then(function () {
-                showNotification('success', 'Αντιγράφηκε στο πρόχειρο!');
+                showNotification('success', 'Copied to clipboard!');
             });
         } else {
             // Fallback for older browsers
@@ -251,7 +251,7 @@ $(document).ready(function () {
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            showNotification('success', 'Αντιγράφηκε στο πρόχειρο!');
+            showNotification('success', 'Copied to clipboard!');
         }
     });
 

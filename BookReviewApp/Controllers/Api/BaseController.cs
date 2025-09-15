@@ -48,7 +48,7 @@ namespace BookReviewApp.Controllers.Api
             return Forbid(message);
         }
 
-        // Overloads για IActionResult (για Delete methods)
+        // Overloads for IActionResult (for Delete methods)
         protected IActionResult HandleException(Exception ex, string context = "")
         {
             var message = string.IsNullOrEmpty(context)

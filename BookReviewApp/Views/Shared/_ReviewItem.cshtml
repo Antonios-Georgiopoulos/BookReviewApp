@@ -10,20 +10,21 @@
                 {
                     <i class="fas fa-star @(i <= Model.Rating ? "text-warning" : "text-muted") me-1"></i>
                 }
-                <small class="text-muted ms-2">@Model.DateCreated.ToString("dd/MM/yyyy HH:mm")</small>
+                <small class="text-muted ms-2">@Model.DateCreated.ToString("MM/dd/yyyy HH:mm")</small>
             </div>
         </div>
 
         @if (User.Identity.IsAuthenticated && User.FindFirstValue(ClaimTypes.NameIdentifier) == Model.UserId)
         {
             <div class="dropdown">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <button class="btn btn-sm btn-outline-secondary"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
                 <ul class="dropdown-menu">
                     <li>
                         <a class="dropdown-item" asp-controller="Reviews" asp-action="Edit" asp-route-id="@Model.Id">
-                            <i class="fas fa-edit"></i> Επεξεργασία
+                            <i class="fas fa-edit"></i> Edit
                         </a>
                     </li>
                     <li>
@@ -31,8 +32,8 @@
                             <input type="hidden" name="id" value="@Model.Id" />
                             <input type="hidden" name="bookId" value="@Model.BookId" />
                             <button type="submit" class="dropdown-item text-danger"
-                                    onclick="return confirm('Είστε βέβαιος ότι θέλετε να διαγράψετε την κριτική σας;')">
-                                <i class="fas fa-trash"></i> Διαγραφή
+                                    onclick="return confirm('Are you sure you want to delete your review?')">
+                                <i class="fas fa-trash"></i> Delete
                             </button>
                         </form>
                     </li>
@@ -56,7 +57,7 @@
                 <i class="fas fa-thumbs-down"></i> @Model.DownvoteCount
             </button>
             <span class="text-muted small">
-                Συνολική βαθμολογία: @Model.NetVotes
+                Net score: @Model.NetVotes
             </span>
         </div>
     }
@@ -65,7 +66,7 @@
         <div class="text-muted small">
             <i class="fas fa-thumbs-up text-success"></i> @Model.UpvoteCount
             <i class="fas fa-thumbs-down text-danger ms-3"></i> @Model.DownvoteCount
-            <span class="ms-3">Συνολική βαθμολογία: @Model.NetVotes</span>
+            <span class="ms-3">Net score: @Model.NetVotes</span>
         </div>
     }
     else
@@ -73,9 +74,9 @@
         <div class="text-muted small">
             <i class="fas fa-thumbs-up text-success"></i> @Model.UpvoteCount
             <i class="fas fa-thumbs-down text-danger ms-3"></i> @Model.DownvoteCount
-            <span class="ms-3">Συνολική βαθμολογία: @Model.NetVotes</span>
+            <span class="ms-3">Net score: @Model.NetVotes</span>
             <div class="mt-2">
-                <a asp-area="Identity" asp-page="/Account/Login">Συνδεθείτε</a> για να ψηφίσετε
+                <a asp-area="Identity" asp-page="/Account/Login">Sign in</a> to vote
             </div>
         </div>
     }

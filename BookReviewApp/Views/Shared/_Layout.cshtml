@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="el">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,14 +24,14 @@
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Books" asp-action="Index">
-                                <i class="fas fa-books"></i> Βιβλία
+                                <i class="fas fa-books"></i> Books
                             </a>
                         </li>
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Books" asp-action="Create">
-                                    <i class="fas fa-plus"></i> Προσθήκη Βιβλίου
+                                    <i class="fas fa-plus"></i> Add Book
                                 </a>
                             </li>
                         }
