@@ -1,4 +1,11 @@
-﻿## User Documentation
+﻿## CI/CD Status
+
+[![CI/CD](https://github.com/Antonios-Georgiopoulos/BookReviewApp/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/Antonios-Georgiopoulos/BookReviewApp/actions/workflows/ci-cd.yml)
+![Checks](https://img.shields.io/github/checks-status/Antonios-Georgiopoulos/BookReviewApp/main)
+![Last Commit](https://img.shields.io/github/last-commit/Antonios-Georgiopoulos/BookReviewApp)
+![Code Scanning Alerts](https://img.shields.io/github/code-scanning/alerts/Antonios-Georgiopoulos/BookReviewApp)
+
+## User Documentation
 
 - 📖 [User Guide](USER_GUIDE.md)
 
