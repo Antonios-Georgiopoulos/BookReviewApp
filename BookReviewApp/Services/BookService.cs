@@ -1,55 +1,37 @@
-﻿using BookReviewApp.Data;
+﻿using AutoMapper;
+using BookReviewApp.Data.Repositories.Interfaces;
 using BookReviewApp.Models.Domain;
 using BookReviewApp.Models.ViewModels;
 using BookReviewApp.Models.ViewModels.Api;
 using BookReviewApp.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace BookReviewApp.Services
 {
     public class BookService : IBookService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public BookService(ApplicationDbContext context)
+        public BookService(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<BookDto>> GetAllBooksAsync(string? genre = null, int? year = null, double? minRating = null)
         {
-            var query = _context.Books
-                .Include(b => b.Reviews)
-                .AsQueryable();
+            var books = await _unitOfWork.Books.GetAllAsync(
+                filter: b => (string.IsNullOrEmpty(genre) || b.Genre.Equals(genre, StringComparison.CurrentCultureIgnoreCase)) &&
+                            (!year.HasValue || b.PublishedYear == year.Value),
+                includeProperties: "Reviews"
+            );
 
-            if (!string.IsNullOrEmpty(genre))
-            {
-                query = query.Where(b => b.Genre.Equals(genre, StringComparison.CurrentCultureIgnoreCase));
-            }
-
-            if (year.HasValue)
-            {
-                query = query.Where(b => b.PublishedYear == year.Value);
-            }
-
-            var books = await query.ToListAsync();
-
-            var bookDtos = books.Select(b => new BookDto
-            {
-                Id = b.Id,
-                Title = b.Title,
-                Author = b.Author,
-                PublishedYear = b.PublishedYear,
-                Genre = b.Genre,
-                DateCreated = b.DateCreated,
-                ReviewCount = b.Reviews.Count,
-                AverageRating = b.Reviews.Count != 0 ? Math.Round(b.Reviews.Average(r => r.Rating), 2) : 0
-            }).ToList();
+            var bookDtos = _mapper.Map<List<BookDto>>(books);
 
             if (minRating.HasValue)
             {
-                bookDtos = [.. bookDtos.Where(b => b.AverageRating >= minRating.Value)];
+                bookDtos = bookDtos.Where(b => b.AverageRating >= minRating.Value).ToList();
             }
 
             return bookDtos;
@@ -57,80 +39,50 @@ namespace BookReviewApp.Services
 
         public async Task<BookDto?> GetBookByIdAsync(int id)
         {
-            var book = await _context.Books
-                .Include(b => b.Reviews)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _unitOfWork.Books.GetFirstOrDefaultAsync(
+                filter: b => b.Id == id,
+                includeProperties: "Reviews"
+            );
 
-            if (book == null) return null;
-
-            return new BookDto
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                PublishedYear = book.PublishedYear,
-                Genre = book.Genre,
-                DateCreated = book.DateCreated,
-                ReviewCount = book.Reviews.Count,
-                AverageRating = book.Reviews.Count != 0 ? Math.Round(book.Reviews.Average(r => r.Rating), 2) : 0
-            };
+            return book == null ? null : _mapper.Map<BookDto>(book);
         }
 
         public async Task<BookDto> CreateBookAsync(CreateBookDto createBookDto)
         {
-            var book = new Book
-            {
-                Title = createBookDto.Title,
-                Author = createBookDto.Author,
-                PublishedYear = createBookDto.PublishedYear,
-                Genre = createBookDto.Genre,
-                DateCreated = DateTime.UtcNow
-            };
+            var book = _mapper.Map<Book>(createBookDto);
+            book.DateCreated = DateTime.UtcNow;
 
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Books.AddAsync(book);
+            await _unitOfWork.SaveAsync();
 
-            return new BookDto
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                PublishedYear = book.PublishedYear,
-                Genre = book.Genre,
-                DateCreated = book.DateCreated,
-                ReviewCount = 0,
-                AverageRating = 0
-            };
+            return _mapper.Map<BookDto>(book);
         }
 
         public async Task<BookDto?> UpdateBookAsync(int id, CreateBookDto updateBookDto)
         {
-            var book = await _context.Books.FindAsync(id);
+            var book = await _unitOfWork.Books.GetByIdAsync(id);
             if (book == null) return null;
 
-            book.Title = updateBookDto.Title;
-            book.Author = updateBookDto.Author;
-            book.PublishedYear = updateBookDto.PublishedYear;
-            book.Genre = updateBookDto.Genre;
-
-            await _context.SaveChangesAsync();
+            _mapper.Map(updateBookDto, book);
+            _unitOfWork.Books.Update(book);
+            await _unitOfWork.SaveAsync();
 
             return await GetBookByIdAsync(id);
         }
 
         public async Task<bool> DeleteBookAsync(int id)
         {
-            var book = await _context.Books.FindAsync(id);
+            var book = await _unitOfWork.Books.GetByIdAsync(id);
             if (book == null) return false;
 
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
+            _unitOfWork.Books.Delete(book);
+            await _unitOfWork.SaveAsync();
             return true;
         }
 
         public async Task<bool> BookExistsAsync(int id)
         {
-            return await _context.Books.AnyAsync(b => b.Id == id);
+            return await _unitOfWork.Books.ExistsAsync(b => b.Id == id);
         }
 
         public async Task<BookListViewModel> GetBookListViewModelAsync(
@@ -143,52 +95,22 @@ namespace BookReviewApp.Services
             int page = 1,
             int pageSize = 10)
         {
-            var query = _context.Books
-                .Include(b => b.Reviews)
-                .AsQueryable();
+            var books = await _unitOfWork.Books.GetAllAsync(
+                filter: b => (string.IsNullOrEmpty(searchTerm) || b.Title.Contains(searchTerm) || b.Author.Contains(searchTerm)) &&
+                            (string.IsNullOrEmpty(genre) || b.Genre == genre) &&
+                            (!year.HasValue || b.PublishedYear == year.Value),
+                includeProperties: "Reviews"
+            );
 
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                query = query.Where(b => b.Title.Contains(searchTerm) || b.Author.Contains(searchTerm));
-            }
-
-            if (!string.IsNullOrEmpty(genre))
-            {
-                query = query.Where(b => b.Genre == genre);
-            }
-
-            if (year.HasValue)
-            {
-                query = query.Where(b => b.PublishedYear == year.Value);
-            }
-
-            var books = await query.ToListAsync();
-
-            var bookViewModels = books.Select(b => new BookViewModel
-            {
-                Id = b.Id,
-                Title = b.Title,
-                Author = b.Author,
-                PublishedYear = b.PublishedYear,
-                Genre = b.Genre,
-                DateCreated = b.DateCreated,
-                ReviewCount = b.Reviews.Count,
-                AverageRating = b.Reviews.Count != 0 ? Math.Round(b.Reviews.Average(r => r.Rating), 2) : 0
-            }).ToList();
+            var bookViewModels = _mapper.Map<List<BookViewModel>>(books);
 
             if (minRating.HasValue)
             {
-                bookViewModels = [.. bookViewModels.Where(b => b.AverageRating >= minRating.Value)];
+                bookViewModels = bookViewModels.Where(b => b.AverageRating >= minRating.Value).ToList();
             }
 
-            bookViewModels = sortBy.ToLower() switch
-            {
-                "author" => sortOrder == "desc" ? [.. bookViewModels.OrderByDescending(b => b.Author)] : [.. bookViewModels.OrderBy(b => b.Author)],
-                "publishedyear" => sortOrder == "desc" ? [.. bookViewModels.OrderByDescending(b => b.PublishedYear)] : [.. bookViewModels.OrderBy(b => b.PublishedYear)],
-                "averagerating" => sortOrder == "desc" ? [.. bookViewModels.OrderByDescending(b => b.AverageRating)] : [.. bookViewModels.OrderBy(b => b.AverageRating)],
-                "datecreated" => sortOrder == "desc" ? [.. bookViewModels.OrderByDescending(b => b.DateCreated)] : [.. bookViewModels.OrderBy(b => b.DateCreated)],
-                _ => sortOrder == "desc" ? [.. bookViewModels.OrderByDescending(b => b.Title)] : [.. bookViewModels.OrderBy(b => b.Title)]
-            };
+            // Apply sorting
+            bookViewModels = ApplySorting(bookViewModels, sortBy, sortOrder);
 
             var totalBooks = bookViewModels.Count;
             var totalPages = (int)Math.Ceiling(totalBooks / (double)pageSize);
@@ -214,39 +136,26 @@ namespace BookReviewApp.Services
 
         public async Task<BookDetailsViewModel> GetBookDetailsViewModelAsync(int id, string? userId = null)
         {
-            var book = await _context.Books
-                .Include(b => b.Reviews)
-                    .ThenInclude(r => r.User)
-                .Include(b => b.Reviews)
-                    .ThenInclude(r => r.ReviewVotes)
-                .FirstOrDefaultAsync(b => b.Id == id) ?? throw new ArgumentException($"Book with id {id} not found");
-            var bookViewModel = new BookViewModel
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                PublishedYear = book.PublishedYear,
-                Genre = book.Genre,
-                DateCreated = book.DateCreated,
-                ReviewCount = book.Reviews.Count,
-                AverageRating = book.Reviews.Count != 0 ? Math.Round(book.Reviews.Average(r => r.Rating), 2) : 0
-            };
+            var book = await _unitOfWork.Books.GetFirstOrDefaultAsync(
+                filter: b => b.Id == id,
+                includeProperties: "Reviews,Reviews.User,Reviews.ReviewVotes"
+            );
 
-            var reviewViewModels = book.Reviews.Select(r => new ReviewViewModel
+            if (book == null)
+                throw new ArgumentException($"Book with id {id} not found");
+
+            var bookViewModel = _mapper.Map<BookViewModel>(book);
+            var reviewViewModels = _mapper.Map<List<ReviewViewModel>>(book.Reviews);
+
+            // Set user vote information
+            if (!string.IsNullOrEmpty(userId))
             {
-                Id = r.Id,
-                Content = r.Content,
-                Rating = r.Rating,
-                DateCreated = r.DateCreated,
-                BookId = r.BookId,
-                BookTitle = book.Title,
-                UserId = r.UserId,
-                UserName = r.User.UserName ?? "Unknown",
-                UpvoteCount = r.ReviewVotes.Count(rv => rv.IsUpvote),
-                DownvoteCount = r.ReviewVotes.Count(rv => !rv.IsUpvote),
-                UserVote = !string.IsNullOrEmpty(userId) ?
-                    r.ReviewVotes.FirstOrDefault(rv => rv.UserId == userId)?.IsUpvote : null
-            }).OrderByDescending(r => r.DateCreated);
+                foreach (var reviewVM in reviewViewModels)
+                {
+                    var review = book.Reviews.First(r => r.Id == reviewVM.Id);
+                    reviewVM.UserVote = review.ReviewVotes.FirstOrDefault(rv => rv.UserId == userId)?.IsUpvote;
+                }
+            }
 
             var userHasReviewed = !string.IsNullOrEmpty(userId) &&
                 book.Reviews.Any(r => r.UserId == userId);
@@ -254,7 +163,7 @@ namespace BookReviewApp.Services
             return new BookDetailsViewModel
             {
                 Book = bookViewModel,
-                Reviews = reviewViewModels,
+                Reviews = reviewViewModels.OrderByDescending(r => r.DateCreated),
                 NewReview = new ReviewViewModel { BookId = id },
                 CanAddReview = !string.IsNullOrEmpty(userId),
                 UserHasReviewed = userHasReviewed
@@ -263,20 +172,26 @@ namespace BookReviewApp.Services
 
         public async Task<IEnumerable<string>> GetGenresAsync()
         {
-            return await _context.Books
-                .Select(b => b.Genre)
-                .Distinct()
-                .OrderBy(g => g)
-                .ToListAsync();
+            var books = await _unitOfWork.Books.GetAllAsync();
+            return books.Select(b => b.Genre).Distinct().OrderBy(g => g);
         }
 
         public async Task<IEnumerable<int>> GetPublishedYearsAsync()
         {
-            return await _context.Books
-                .Select(b => b.PublishedYear)
-                .Distinct()
-                .OrderByDescending(y => y)
-                .ToListAsync();
+            var books = await _unitOfWork.Books.GetAllAsync();
+            return books.Select(b => b.PublishedYear).Distinct().OrderByDescending(y => y);
+        }
+
+        private static List<BookViewModel> ApplySorting(List<BookViewModel> books, string sortBy, string sortOrder)
+        {
+            return sortBy.ToLower() switch
+            {
+                "author" => sortOrder == "desc" ? books.OrderByDescending(b => b.Author).ToList() : books.OrderBy(b => b.Author).ToList(),
+                "publishedyear" => sortOrder == "desc" ? books.OrderByDescending(b => b.PublishedYear).ToList() : books.OrderBy(b => b.PublishedYear).ToList(),
+                "averagerating" => sortOrder == "desc" ? books.OrderByDescending(b => b.AverageRating).ToList() : books.OrderBy(b => b.AverageRating).ToList(),
+                "datecreated" => sortOrder == "desc" ? books.OrderByDescending(b => b.DateCreated).ToList() : books.OrderBy(b => b.DateCreated).ToList(),
+                _ => sortOrder == "desc" ? books.OrderByDescending(b => b.Title).ToList() : books.OrderBy(b => b.Title).ToList()
+            };
         }
 
         private async Task<IEnumerable<SelectListItem>> GetGenreSelectListAsync()

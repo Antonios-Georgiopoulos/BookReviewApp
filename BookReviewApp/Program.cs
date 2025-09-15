@@ -1,6 +1,9 @@
 ﻿using BookReviewApp.Data;
+using BookReviewApp.Data.Repositories;
+using BookReviewApp.Data.Repositories.Interfaces;
 using BookReviewApp.Models.Domain;
 using BookReviewApp.Services;
+using BookReviewApp.Services.Caching;
 using BookReviewApp.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -43,8 +46,19 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 
-builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<IBookService>(provider =>
+{
+    var bookService = provider.GetRequiredService<BookService>();
+    var cacheService = provider.GetRequiredService<ICacheService>();
+    return new CachedBookService(bookService, cacheService);
+});
+
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ICacheService, MemoryCacheService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
