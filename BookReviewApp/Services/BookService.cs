@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using BookReviewApp.Data.Repositories.Interfaces;
+﻿using BookReviewApp.Data.Repositories.Interfaces;
 using BookReviewApp.Models.Domain;
 using BookReviewApp.Models.ViewModels;
 using BookReviewApp.Models.ViewModels.Api;
@@ -11,12 +10,10 @@ namespace BookReviewApp.Services
     public class BookService : IBookService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
 
-        public BookService(IUnitOfWork unitOfWork, IMapper mapper)
+        public BookService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _mapper = mapper;
         }
 
         public async Task<IEnumerable<BookDto>> GetAllBooksAsync(string? genre = null, int? year = null, double? minRating = null)
@@ -27,7 +24,17 @@ namespace BookReviewApp.Services
                 includeProperties: "Reviews"
             );
 
-            var bookDtos = _mapper.Map<List<BookDto>>(books);
+            var bookDtos = books.Select(b => new BookDto
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Author = b.Author,
+                PublishedYear = b.PublishedYear,
+                Genre = b.Genre,
+                DateCreated = b.DateCreated,
+                ReviewCount = b.Reviews.Count,
+                AverageRating = b.Reviews.Count != 0 ? Math.Round(b.Reviews.Average(r => r.Rating), 2) : 0
+            }).ToList();
 
             if (minRating.HasValue)
             {
@@ -44,18 +51,46 @@ namespace BookReviewApp.Services
                 includeProperties: "Reviews"
             );
 
-            return book == null ? null : _mapper.Map<BookDto>(book);
+            if (book == null) return null;
+
+            return new BookDto
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                PublishedYear = book.PublishedYear,
+                Genre = book.Genre,
+                DateCreated = book.DateCreated,
+                ReviewCount = book.Reviews.Count,
+                AverageRating = book.Reviews.Count != 0 ? Math.Round(book.Reviews.Average(r => r.Rating), 2) : 0
+            };
         }
 
         public async Task<BookDto> CreateBookAsync(CreateBookDto createBookDto)
         {
-            var book = _mapper.Map<Book>(createBookDto);
-            book.DateCreated = DateTime.UtcNow;
+            var book = new Book
+            {
+                Title = createBookDto.Title,
+                Author = createBookDto.Author,
+                PublishedYear = createBookDto.PublishedYear,
+                Genre = createBookDto.Genre,
+                DateCreated = DateTime.UtcNow
+            };
 
             await _unitOfWork.Books.AddAsync(book);
             await _unitOfWork.SaveAsync();
 
-            return _mapper.Map<BookDto>(book);
+            return new BookDto
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                PublishedYear = book.PublishedYear,
+                Genre = book.Genre,
+                DateCreated = book.DateCreated,
+                ReviewCount = 0,
+                AverageRating = 0
+            };
         }
 
         public async Task<BookDto?> UpdateBookAsync(int id, CreateBookDto updateBookDto)
@@ -63,7 +98,11 @@ namespace BookReviewApp.Services
             var book = await _unitOfWork.Books.GetByIdAsync(id);
             if (book == null) return null;
 
-            _mapper.Map(updateBookDto, book);
+            book.Title = updateBookDto.Title;
+            book.Author = updateBookDto.Author;
+            book.PublishedYear = updateBookDto.PublishedYear;
+            book.Genre = updateBookDto.Genre;
+
             _unitOfWork.Books.Update(book);
             await _unitOfWork.SaveAsync();
 
@@ -102,7 +141,17 @@ namespace BookReviewApp.Services
                 includeProperties: "Reviews"
             );
 
-            var bookViewModels = _mapper.Map<List<BookViewModel>>(books);
+            var bookViewModels = books.Select(b => new BookViewModel
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Author = b.Author,
+                PublishedYear = b.PublishedYear,
+                Genre = b.Genre,
+                DateCreated = b.DateCreated,
+                ReviewCount = b.Reviews.Count,
+                AverageRating = b.Reviews.Count != 0 ? Math.Round(b.Reviews.Average(r => r.Rating), 2) : 0
+            }).ToList();
 
             if (minRating.HasValue)
             {
@@ -144,18 +193,33 @@ namespace BookReviewApp.Services
             if (book == null)
                 throw new ArgumentException($"Book with id {id} not found");
 
-            var bookViewModel = _mapper.Map<BookViewModel>(book);
-            var reviewViewModels = _mapper.Map<List<ReviewViewModel>>(book.Reviews);
-
-            // Set user vote information
-            if (!string.IsNullOrEmpty(userId))
+            var bookViewModel = new BookViewModel
             {
-                foreach (var reviewVM in reviewViewModels)
-                {
-                    var review = book.Reviews.First(r => r.Id == reviewVM.Id);
-                    reviewVM.UserVote = review.ReviewVotes.FirstOrDefault(rv => rv.UserId == userId)?.IsUpvote;
-                }
-            }
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                PublishedYear = book.PublishedYear,
+                Genre = book.Genre,
+                DateCreated = book.DateCreated,
+                ReviewCount = book.Reviews.Count,
+                AverageRating = book.Reviews.Count != 0 ? Math.Round(book.Reviews.Average(r => r.Rating), 2) : 0
+            };
+
+            var reviewViewModels = book.Reviews.Select(r => new ReviewViewModel
+            {
+                Id = r.Id,
+                Content = r.Content,
+                Rating = r.Rating,
+                DateCreated = r.DateCreated,
+                BookId = r.BookId,
+                BookTitle = book.Title,
+                UserId = r.UserId,
+                UserName = r.User.UserName ?? "Unknown",
+                UpvoteCount = r.ReviewVotes.Count(rv => rv.IsUpvote),
+                DownvoteCount = r.ReviewVotes.Count(rv => !rv.IsUpvote),
+                UserVote = !string.IsNullOrEmpty(userId) ?
+                    r.ReviewVotes.FirstOrDefault(rv => rv.UserId == userId)?.IsUpvote : null
+            }).OrderByDescending(r => r.DateCreated);
 
             var userHasReviewed = !string.IsNullOrEmpty(userId) &&
                 book.Reviews.Any(r => r.UserId == userId);
@@ -163,7 +227,7 @@ namespace BookReviewApp.Services
             return new BookDetailsViewModel
             {
                 Book = bookViewModel,
-                Reviews = reviewViewModels.OrderByDescending(r => r.DateCreated),
+                Reviews = reviewViewModels,
                 NewReview = new ReviewViewModel { BookId = id },
                 CanAddReview = !string.IsNullOrEmpty(userId),
                 UserHasReviewed = userHasReviewed

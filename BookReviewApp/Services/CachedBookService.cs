@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using BookReviewApp.Common;
+﻿using BookReviewApp.Common;
 using BookReviewApp.Models.ViewModels;
 using BookReviewApp.Models.ViewModels.Api;
 using BookReviewApp.Services.Caching;

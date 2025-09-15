@@ -60,10 +60,7 @@ try
     builder.Services.AddControllers();
     builder.Services.AddRazorPages();
 
-    // AutoMapper
-    builder.Services.AddAutoMapper(typeof(Program));
-
-    // Application Services (using extension method)
+    // Application Services (using extension method - without AutoMapper)
     builder.Services.AddApplicationServices();
 
     // API Configuration (using extension method)

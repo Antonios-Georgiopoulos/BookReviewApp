@@ -14,14 +14,8 @@ namespace BookReviewApp.Infrastructure.Extensions
             // Repository Pattern
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            // Business Services
-            services.AddScoped<BookService>();
-            services.AddScoped<IBookService>(provider =>
-            {
-                var bookService = provider.GetRequiredService<BookService>();
-                var cacheService = provider.GetRequiredService<ICacheService>();
-                return new CachedBookService(bookService, cacheService);
-            });
+            // Business Services - Direct registration without AutoMapper
+            services.AddScoped<IBookService, BookService>();
             services.AddScoped<IReviewService, ReviewService>();
 
             // Caching

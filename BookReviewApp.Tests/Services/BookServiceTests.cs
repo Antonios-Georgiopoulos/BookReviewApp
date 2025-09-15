@@ -1,5 +1,4 @@
 ﻿using BookReviewApp.Services;
-using BookReviewApp.Data.Repositories.Interfaces;
 
 namespace BookReviewApp.Tests.Services
 {
