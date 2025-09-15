@@ -3,6 +3,57 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to Book Review App</h1>
+    <p class="lead">Discover, review, and share your favorite books with our community.</p>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-book fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Discover Books</h5>
+                    <p class="card-text">Browse through our collection of books and find your next great read.</p>
+                    <a asp-controller="Books" asp-action="Index" class="btn btn-primary">Browse Books</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Write Reviews</h5>
+                    <p class="card-text">Share your thoughts and rate books to help other readers make informed choices.</p>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <a asp-controller="Books" asp-action="Index" class="btn btn-warning">Start Reviewing</a>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-warning">Join to Review</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Join Community</h5>
+                    <p class="card-text">Connect with fellow book lovers and participate in meaningful discussions.</p>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <span class="text-success">
+                            <i class="fas fa-check-circle"></i> You're part of the community!
+                        </span>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-success">Join Now</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

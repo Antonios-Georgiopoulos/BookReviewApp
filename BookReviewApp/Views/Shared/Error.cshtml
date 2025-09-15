@@ -1,15 +1,15 @@
 ﻿@model BookReviewApp.Models.ErrorViewModel
 @{
-    ViewData["Title"] = "Σφάλμα";
+    ViewData["Title"] = "Error";
 }
 
 <div class="text-center">
     <h1 class="display-1 text-danger">
         <i class="fas fa-exclamation-triangle"></i>
     </h1>
-    <h2 class="display-4">Ups! Κάτι πήγε στραβά</h2>
+    <h2 class="display-4">Oops! Something went wrong</h2>
     <p class="lead text-muted">
-        Παρουσιάστηκε ένα απροσδόκητο σφάλμα. Παρακαλούμε δοκιμάστε ξανά αργότερα.
+        An unexpected error occurred. Please try again later.
     </p>
 
     @if (Model.ShowRequestId)
@@ -18,17 +18,17 @@
             <strong>Request ID:</strong> <code>@Model.RequestId</code>
             <br>
             <small class="text-muted">
-                Παρακαλούμε αναφέρετε αυτόν τον κωδικό αν επικοινωνήσετε με την υποστήριξη.
+                Please report this code if you contact support.
             </small>
         </div>
     }
 
     <div class="mt-4">
         <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-            <i class="fas fa-home"></i> Επιστροφή στην Αρχική
+            <i class="fas fa-home"></i> Return to Home
         </a>
         <button onclick="history.back()" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Πίσω
+            <i class="fas fa-arrow-left"></i> Back
         </button>
     </div>
 </div>

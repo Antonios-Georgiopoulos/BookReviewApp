@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BookReviewApp.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookReviewApp.Models.ViewModels
 {
@@ -6,33 +7,33 @@ namespace BookReviewApp.Models.ViewModels
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Ο τίτλος είναι υποχρεωτικός")]
-        [Display(Name = "Τίτλος")]
-        [StringLength(200, ErrorMessage = "Ο τίτλος δεν μπορεί να υπερβαίνει τους 200 χαρακτήρες")]
+        [Required(ErrorMessage = ValidationMessages.TitleRequired)]
+        [Display(Name = "Title")]
+        [StringLength(200, ErrorMessage = ValidationMessages.TitleRange)]
         public string Title { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Ο συγγραφέας είναι υποχρεωτικός")]
-        [Display(Name = "Συγγραφέας")]
-        [StringLength(100, ErrorMessage = "Το όνομα του συγγραφέα δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")]
+        [Required(ErrorMessage = ValidationMessages.AuthorRequired)]
+        [Display(Name = "Author")]
+        [StringLength(100, ErrorMessage = ValidationMessages.AuthorRange)]
         public string Author { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Το έτος έκδοσης είναι υποχρεωτικό")]
-        [Display(Name = "Έτος Έκδοσης")]
-        [Range(1000, 2100, ErrorMessage = "Το έτος πρέπει να είναι μεταξύ 1000 και 2100")]
+        [Required(ErrorMessage = ValidationMessages.YearRequired)]
+        [Display(Name = "Publication Year")]
+        [Range(1000, 2100, ErrorMessage = ValidationMessages.YearRange)]
         public int PublishedYear { get; set; }
 
-        [Required(ErrorMessage = "Το είδος είναι υποχρεωτικό")]
-        [Display(Name = "Είδος")]
-        [StringLength(50, ErrorMessage = "Το είδος δεν μπορεί να υπερβαίνει τους 50 χαρακτήρες")]
+        [Required(ErrorMessage = ValidationMessages.GenreRequired)]
+        [Display(Name = "Genre")]
+        [StringLength(50, ErrorMessage = ValidationMessages.GenreRange)]
         public string Genre { get; set; } = string.Empty;
 
-        [Display(Name = "Ημερομηνία Δημιουργίας")]
+        [Display(Name = "Date Created")]
         public DateTime DateCreated { get; set; }
 
-        [Display(Name = "Μέση Αξιολόγηση")]
+        [Display(Name = "Average Rating")]
         public double AverageRating { get; set; }
 
-        [Display(Name = "Αριθμός Κριτικών")]
+        [Display(Name = "Review Count")]
         public int ReviewCount { get; set; }
     }
 }

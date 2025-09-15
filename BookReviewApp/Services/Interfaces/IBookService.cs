@@ -1,5 +1,4 @@
-﻿using BookReviewApp.Models.Domain;
-using BookReviewApp.Models.ViewModels;
+﻿using BookReviewApp.Models.ViewModels;
 using BookReviewApp.Models.ViewModels.Api;
 
 namespace BookReviewApp.Services.Interfaces

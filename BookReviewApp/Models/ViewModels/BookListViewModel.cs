@@ -22,16 +22,16 @@ namespace BookReviewApp.Models.ViewModels
         public int TotalPages { get; set; }
         public int TotalBooks { get; set; }
 
-        // Dropdown lists για filter
+        // Dropdown lists for filters
         public IEnumerable<SelectListItem> GenreOptions { get; set; } = [];
         public IEnumerable<SelectListItem> YearOptions { get; set; } = [];
         public IEnumerable<SelectListItem> SortOptions { get; set; } =
         [
-            new() { Value = "Title", Text = "Τίτλος" },
-            new() { Value = "Author", Text = "Συγγραφέας" },
-            new() { Value = "PublishedYear", Text = "Έτος Έκδοσης" },
-            new() { Value = "AverageRating", Text = "Αξιολόγηση" },
-            new() { Value = "DateCreated", Text = "Ημερομηνία Προσθήκης" }
+            new() { Value = "Title", Text = "Title" },
+            new() { Value = "Author", Text = "Author" },
+            new() { Value = "PublishedYear", Text = "Publication Year" },
+            new() { Value = "AverageRating", Text = "Rating" },
+            new() { Value = "DateCreated", Text = "Date Added" }
         ];
     }
 }

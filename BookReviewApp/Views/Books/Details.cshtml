@@ -5,7 +5,7 @@
     ViewData["Title"] = Model.Book.Title;
 }
 
-<!-- Στοιχεία Βιβλίου -->
+<!-- Book Details -->
 <div class="row mb-4">
     <div class="col-md-8">
         <h1>@Model.Book.Title</h1>
@@ -32,52 +32,52 @@
                         <i class="fas fa-star @(i <= Model.Book.AverageRating ? "text-warning" : "text-muted") me-1"></i>
                     }
                     <span class="ms-2">
-                        <strong>@Model.Book.AverageRating.ToString("F1")</strong> από @Model.Book.ReviewCount κριτικές
+                        <strong>@Model.Book.AverageRating.ToString("F1")</strong> from @Model.Book.ReviewCount reviews
                     </span>
                 </div>
             </div>
         }
         else
         {
-            <p class="text-muted">Αυτό το βιβλίο δεν έχει ακόμα κριτικές.</p>
+            <p class="text-muted">This book has no reviews yet.</p>
         }
 
         <small class="text-muted">
-            Προστέθηκε: @Model.Book.DateCreated.ToString("dd/MM/yyyy HH:mm")
+            Added: @Model.Book.DateCreated.ToString("MM/dd/yyyy HH:mm")
         </small>
     </div>
 
     <div class="col-md-4">
         <div class="d-flex flex-column gap-2">
             <a asp-action="Index" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left"></i> Πίσω στη Λίστα
+                <i class="fas fa-arrow-left"></i> Back to List
             </a>
 
             @if (User.Identity.IsAuthenticated)
             {
                 <a asp-action="Edit" asp-route-id="@Model.Book.Id" class="btn btn-warning">
-                    <i class="fas fa-edit"></i> Επεξεργασία
+                    <i class="fas fa-edit"></i> Edit
                 </a>
                 <a asp-action="Delete" asp-route-id="@Model.Book.Id" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> Διαγραφή
+                    <i class="fas fa-trash"></i> Delete
                 </a>
             }
         </div>
     </div>
 </div>
 
-<!-- Προσθήκη Κριτικής -->
+<!-- Add Review -->
 @if (Model.CanAddReview && !Model.UserHasReviewed)
 {
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-pen"></i> Γράψτε την κριτική σας</h5>
+            <h5 class="mb-0"><i class="fas fa-pen"></i> Write your review</h5>
         </div>
         <div class="card-body">
             <form asp-action="AddReview" method="post">
                 @Html.AntiForgeryToken()
 
-                <!-- Hidden fields για όλα τα απαραίτητα πεδία του Book -->
+                <!-- Hidden fields for all required Book properties -->
                 <input asp-for="Book.Id" type="hidden" />
                 <input asp-for="Book.Title" type="hidden" />
                 <input asp-for="Book.Author" type="hidden" />
@@ -89,32 +89,32 @@
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <!-- ΑΞΙΟΛΟΓΗΣΗ (διορθωμένο) -->
+                <!-- RATING (corrected) -->
                 <div class="mb-3">
-                    <label class="form-label">Αξιολόγηση</label>
+                    <label class="form-label">Rating</label>
                     <div class="rating-input">
                         @for (int i = 5; i >= 1; i--)
                         {
-                            <!-- Χρησιμοποιούμε asp-for για να κρατάει την επιλογή σε validation errors -->
+                            <!-- Use asp-for to maintain selection in validation errors -->
                             <input asp-for="NewReview.Rating" type="radio" value="@i" id="rating@(i)" />
-                            <label for="rating@(i)" class="star-label" aria-label="@i αστέρια">
+                            <label for="rating@(i)" class="star-label" aria-label="@i stars">
                                 <i class="fas fa-star"></i>
                             </label>
                         }
                     </div>
-                    <small class="text-muted">Κάντε κλικ σε ένα αστέρι για να επιλέξετε βαθμολογία</small>
+                    <small class="text-muted">Click on a star to select rating</small>
                     <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="NewReview.Content" class="form-label">Κριτική</label>
+                    <label asp-for="NewReview.Content" class="form-label">Review</label>
                     <textarea asp-for="NewReview.Content" class="form-control" rows="4"
-                              placeholder="Μοιραστείτε τη γνώμη σας για αυτό το βιβλίο..."></textarea>
+                              placeholder="Share your thoughts about this book..."></textarea>
                     <span asp-validation-for="NewReview.Content" class="text-danger"></span>
                 </div>
 
                 <button type="submit" class="btn btn-success">
-                    <i class="fas fa-paper-plane"></i> Αποστολή Κριτικής
+                    <i class="fas fa-paper-plane"></i> Submit Review
                 </button>
             </form>
         </div>
@@ -123,30 +123,30 @@
 else if (Model.UserHasReviewed)
 {
     <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i> Έχετε ήδη γράψει κριτική για αυτό το βιβλίο.
+        <i class="fas fa-info-circle"></i> You have already written a review for this book.
     </div>
 }
 else if (!Model.CanAddReview)
 {
     <div class="alert alert-warning">
         <i class="fas fa-sign-in-alt"></i>
-        <a asp-area="Identity" asp-page="/Account/Login">Συνδεθείτε</a> για να γράψετε κριτική.
+        <a asp-area="Identity" asp-page="/Account/Login">Sign in</a> to write a review.
     </div>
 }
 
-<!-- Κριτικές -->
+<!-- Reviews -->
 <div class="card">
     <div class="card-header">
         <h5 class="mb-0">
             <i class="fas fa-comments"></i>
-            Κριτικές (@Model.Reviews.Count())
+            Reviews (@Model.Reviews.Count())
         </h5>
     </div>
     <div class="card-body">
         @if (!Model.Reviews.Any())
         {
             <p class="text-muted mb-0">
-                <i class="fas fa-comment-slash"></i> Δεν υπάρχουν κριτικές για αυτό το βιβλίο.
+                <i class="fas fa-comment-slash"></i> There are no reviews for this book yet.
             </p>
         }
         else
@@ -163,16 +163,16 @@ else if (!Model.CanAddReview)
     <partial name="_ValidationScriptsPartial" />
 
     <style>
-        /* ΔΙΟΡΘΩΣΗ RATING: μόνο CSS, χωρίς JS */
+        /* RATING FIX: CSS only, no JS */
         .rating-input {
             display: inline-flex;
-            flex-direction: row-reverse; /* ώστε το 5 να εμφανίζεται δεξιά */
+            flex-direction: row-reverse; /* so 5 appears on the right */
             gap: 6px;
             margin-bottom: 10px;
         }
 
             .rating-input input {
-                display: none; /* κρύβουμε τα radio */
+                display: none; /* hide radios */
             }
 
         .star-label {
@@ -186,14 +186,14 @@ else if (!Model.CanAddReview)
                 color: #ddd;
             }
 
-        /* Hover: βάφει το τρέχον και όλα τα "επόμενα" labels στο DOM.
-                   Επειδή έχουμε row-reverse + φθίνουσα σειρά 5→1, αυτά είναι οπτικά τα αριστερά (δηλ. μέχρι το επιλεγμένο). */
+        /* Hover: colors current and all "following" labels in DOM.
+                           Since we have row-reverse + descending order 5→1, these are visually the left ones (i.e. up to selected). */
         .rating-input label:hover i,
         .rating-input label:hover ~ label i {
             color: #ffc107;
         }
 
-        /* Checked: όταν έχει επιλεγεί ένα radio, βάψε το label του και όσα ακολουθούν στο DOM (οπτικά μέχρι αριστερά). */
+        /* Checked: when a radio is selected, color its label and those that follow in DOM (visually up to left). */
         .rating-input input:checked ~ label i {
             color: #ffc107;
         }
@@ -201,7 +201,7 @@ else if (!Model.CanAddReview)
 
     <script>
         $(function () {
-            // Voting system (μένει ως έχει)
+            // Voting system (remains as is)
             $('.vote-btn').on('click', function (e) {
                 e.preventDefault();
 
@@ -226,7 +226,7 @@ else if (!Model.CanAddReview)
                         }
                     },
                     error: function () {
-                        alert('Παρουσιάστηκε σφάλμα κατά την ψηφοφορία.');
+                        alert('An error occurred while voting.');
                     }
                 });
             });

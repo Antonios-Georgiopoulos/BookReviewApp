@@ -1,7 +1,7 @@
 ﻿@model BookReviewApp.Models.ViewModels.BookViewModel
 
 @{
-    ViewData["Title"] = "Διαγραφή Βιβλίου";
+    ViewData["Title"] = "Delete Book";
 }
 
 <div class="row justify-content-center">
@@ -9,19 +9,19 @@
         <div class="card border-danger">
             <div class="card-header bg-danger text-white">
                 <h4 class="mb-0">
-                    <i class="fas fa-exclamation-triangle"></i> Επιβεβαίωση Διαγραφής
+                    <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
                 </h4>
             </div>
             <div class="card-body">
                 <div class="alert alert-danger">
-                    <h5><i class="fas fa-warning"></i> Προσοχή!</h5>
+                    <h5><i class="fas fa-warning"></i> Warning!</h5>
                     <p class="mb-0">
-                        Είστε βέβαιος ότι θέλετε να διαγράψετε αυτό το βιβλίο;
-                        <strong>Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</strong>
+                        Are you sure you want to delete this book?
+                        <strong>This action cannot be undone.</strong>
                     </p>
                 </div>
 
-                <!-- Στοιχεία Βιβλίου -->
+                <!-- Book Details -->
                 <div class="card bg-light mb-4">
                     <div class="card-body">
                         <h5 class="card-title">@Model.Title</h5>
@@ -29,26 +29,26 @@
 
                         <div class="row">
                             <div class="col-md-3">
-                                <small class="text-muted">Είδος:</small><br>
+                                <small class="text-muted">Genre:</small><br>
                                 <span class="badge bg-secondary">@Model.Genre</span>
                             </div>
                             <div class="col-md-3">
-                                <small class="text-muted">Έτος Έκδοσης:</small><br>
+                                <small class="text-muted">Publication Year:</small><br>
                                 <span class="badge bg-info">@Model.PublishedYear</span>
                             </div>
                             <div class="col-md-3">
-                                <small class="text-muted">Αριθμός Κριτικών:</small><br>
+                                <small class="text-muted">Review Count:</small><br>
                                 <strong>@Model.ReviewCount</strong>
                             </div>
                             <div class="col-md-3">
-                                <small class="text-muted">Μέση Αξιολόγηση:</small><br>
+                                <small class="text-muted">Average Rating:</small><br>
                                 @if (Model.AverageRating > 0)
                                 {
                                     <strong>@Model.AverageRating.ToString("F1") <i class="fas fa-star text-warning"></i></strong>
                                 }
                                 else
                                 {
-                                    <span class="text-muted">Χωρίς αξιολόγηση</span>
+                                    <span class="text-muted">No ratings</span>
                                 }
                             </div>
                         </div>
@@ -57,26 +57,26 @@
 
                         <div class="row">
                             <div class="col-md-6">
-                                <small class="text-muted">Ημερομηνία Προσθήκης:</small><br>
-                                <strong>@Model.DateCreated.ToString("dd/MM/yyyy HH:mm")</strong>
+                                <small class="text-muted">Date Added:</small><br>
+                                <strong>@Model.DateCreated.ToString("MM/dd/yyyy HH:mm")</strong>
                             </div>
                             <div class="col-md-6">
-                                <small class="text-muted">ID Βιβλίου:</small><br>
+                                <small class="text-muted">Book ID:</small><br>
                                 <code>#@Model.Id</code>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Επιπτώσεις Διαγραφής -->
+                <!-- Deletion Consequences -->
                 @if (Model.ReviewCount > 0)
                 {
                     <div class="alert alert-warning">
-                        <h6><i class="fas fa-info-circle"></i> Επιπτώσεις Διαγραφής</h6>
+                        <h6><i class="fas fa-info-circle"></i> Deletion Consequences</h6>
                         <ul class="mb-0">
-                            <li>Θα διαγραφούν <strong>@Model.ReviewCount κριτικές</strong> που σχετίζονται με αυτό το βιβλίο</li>
-                            <li>Θα διαγραφούν όλες οι ψήφοι (likes/dislikes) στις κριτικές</li>
-                            <li>Τα δεδομένα δεν θα μπορούν να ανακτηθούν</li>
+                            <li><strong>@Model.ReviewCount reviews</strong> related to this book will be deleted</li>
+                            <li>All votes (likes/dislikes) on the reviews will be deleted</li>
+                            <li>The data cannot be recovered</li>
                         </ul>
                     </div>
                 }
@@ -84,22 +84,22 @@
                 {
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i>
-                        Αυτό το βιβλίο δεν έχει κριτικές, οπότε η διαγραφή δεν θα επηρεάσει άλλα δεδομένα.
+                        This book has no reviews, so deletion will not affect other data.
                     </div>
                 }
 
-                <!-- Κουμπιά Ενεργειών -->
+                <!-- Action Buttons -->
                 <form asp-action="Delete" method="post" class="d-inline">
                     <input asp-for="Id" type="hidden" />
                     <div class="d-flex gap-2 justify-content-end">
                         <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Ακύρωση
+                            <i class="fas fa-arrow-left"></i> Cancel
                         </a>
                         <a asp-action="Index" class="btn btn-outline-primary">
-                            <i class="fas fa-list"></i> Πίσω στη Λίστα
+                            <i class="fas fa-list"></i> Back to List
                         </a>
                         <button type="submit" class="btn btn-danger" id="deleteButton">
-                            <i class="fas fa-trash"></i> Οριστική Διαγραφή
+                            <i class="fas fa-trash"></i> Permanently Delete
                         </button>
                     </div>
                 </form>
@@ -114,10 +114,10 @@
             $('#deleteButton').click(function(e) {
                 e.preventDefault();
 
-                if (confirm('ΤΕΛΕΥΤΑΙΑ ΠΡΟΕΙΔΟΠΟΙΗΣΗ!\n\nΕίστε απόλυτα βέβαιος ότι θέλετε να διαγράψετε το βιβλίο \nΑυτή η ενέργεια θα διαγράψει:\n- Το βιβλίο\n- Όλες τις κριτικές (@Model.ReviewCount)\n- Όλες τις ψήφους\n\nΔεν θα μπορείτε να το αναιρέσετε!')) {
-                    // Αφαίρεσε τον event listener για να μην παρεμβαίνει
+                if (confirm('FINAL WARNING!\n\nAre you absolutely sure you want to delete this book?\nThis action will delete:\n- The book\n- All reviews (@Model.ReviewCount)\n- All votes\n\nYou cannot undo this!')) {
+                    // Remove the event listener so it doesn't interfere
                     $(this).off('click');
-                    // Υποβολή της φόρμας
+                    // Submit the form
                     $(this).closest('form')[0].submit();
                 }
             });
