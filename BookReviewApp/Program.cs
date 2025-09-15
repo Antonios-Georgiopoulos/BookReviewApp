@@ -1,10 +1,13 @@
 ﻿using BookReviewApp.Data;
 using BookReviewApp.Data.Repositories;
 using BookReviewApp.Data.Repositories.Interfaces;
+using BookReviewApp.Infrastructure.HealthChecks;
+using BookReviewApp.Infrastructure.Middleware;
 using BookReviewApp.Models.Domain;
 using BookReviewApp.Services;
 using BookReviewApp.Services.Caching;
 using BookReviewApp.Services.Interfaces;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,6 +57,19 @@ builder.Services.AddScoped<IBookService>(provider =>
     return new CachedBookService(bookService, cacheService);
 });
 
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database")
+    .AddCheck<CacheHealthCheck>("cache")
+    .AddDbContextCheck<ApplicationDbContext>("ef_context");
+
+builder.Services.AddHealthChecksUI(options =>
+{
+    options.SetEvaluationTimeInSeconds(30);
+    options.AddHealthCheckEndpoint("BookReviewApp", "/health");
+})
+.AddInMemoryStorage();
+
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -93,6 +109,11 @@ else
 }
 
 app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseMiddleware<RequestLoggingMiddleware>();
+}
+
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -124,6 +145,44 @@ using (var scope = app.Services.CreateScope())
             throw;
         }
     }
+}
+
+// Health Check endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            duration = report.TotalDuration,
+            checks = report.Entries.Select(entry => new
+            {
+                name = entry.Key,
+                status = entry.Value.Status.ToString(),
+                duration = entry.Value.Duration,
+                description = entry.Value.Description,
+                data = entry.Value.Data
+            })
+        };
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+    }
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 }
 
 app.Run();
