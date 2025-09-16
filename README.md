@@ -64,7 +64,7 @@ cd BookReviewApp
 dotnet restore
 
 # Update database
-dotnet ef database update --project BookReviewApp
+dotnet ef database update --project BookReviewApp --context ApplicationDbContext
 
 # Run the application
 dotnet run --project BookReviewApp
@@ -180,13 +180,13 @@ dotnet test --filter "BookServiceTests"
 
 ```bash
 # Add new migration
-dotnet ef migrations add MigrationName --project BookReviewApp
+dotnet ef migrations add MigrationName --project BookReviewApp --context ApplicationDbContext
 
 # Update database
-dotnet ef database update --project BookReviewApp
+dotnet ef database update --project BookReviewApp --context ApplicationDbContext
 
 # Remove last migration
-dotnet ef migrations remove --project BookReviewApp
+dotnet ef migrations remove --project BookReviewApp --context ApplicationDbContext
 ```
 
 ### Code Quality
@@ -263,4 +263,4 @@ dotnet ef migrations remove --project BookReviewApp
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
